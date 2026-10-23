@@ -51,3 +51,29 @@ export async function proxyJsonToBackend(request, path, options = {}) {
 	const text = await response.text();
 	return new Response(text, { status: response.status, headers: responseHeaders });
 }
+
+export async function proxyPublicToBackend(request, path, options = {}) {
+	const url = new URL(path, `${getBackendBaseUrl()}/`);
+	const headers = {
+		Accept: 'application/json',
+		...options.headers,
+	};
+
+	if (options.body !== undefined && !headers['Content-Type']) {
+		headers['Content-Type'] = 'application/json';
+	}
+
+	const response = await fetch(url, {
+		method: options.method || request.method,
+		headers,
+		body: options.body,
+		cache: 'no-store',
+	});
+
+	const contentType = response.headers.get('content-type') || 'application/json';
+	const responseHeaders = new Headers();
+	responseHeaders.set('Content-Type', contentType);
+
+	const text = await response.text();
+	return new Response(text, { status: response.status, headers: responseHeaders });
+}

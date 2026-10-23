@@ -25,6 +25,10 @@ export default function DashboardSignInPage() {
         throw new Error(data.error || 'Login failed');
       }
       
+      // Store the access token as a cookie so the dashboard API proxy
+      // can forward it as a Bearer token to the FastAPI backend.
+      document.cookie = `dashboard_token=${data.access_token}; path=/; SameSite=Lax; Max-Age=${data.expires_in || 3600}`;
+      
       // If successful, dashboard_token cookie is now set
       // Redirect to the admin's subdomain
       if (data.subdomain) {

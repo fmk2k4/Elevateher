@@ -369,7 +369,9 @@ export default function SessionPage({ params }) {
   useEffect(() => {
     let es;
     try {
-      es = new EventSource(`/api/sessions/${sessionId}/stream`);
+      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : "";
+      const streamUrl = `/api/sessions/${sessionId}/stream${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+      es = new EventSource(streamUrl);
       es.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);

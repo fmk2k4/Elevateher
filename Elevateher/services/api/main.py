@@ -224,7 +224,9 @@ def create_app() -> FastAPI:
     # ── Middleware Stack ─────────────────────────────────────────────────────────
     # NOTE: Starlette add_middleware() uses LIFO order — the LAST registered
     # middleware is the OUTERMOST (first to receive requests, last to send responses).
-    # Actual request processing order: RLS → Rate Limit → CORS → CSRF → Logging → GZip
+    # CORS is registered LAST so it is the outermost layer: OPTIONS preflight
+    # requests are handled immediately without touching RLS, rate limiting, or DB.
+    # Actual request processing order: CORS → Rate Limit → RLS → CSRF → Logging → GZip
     #
     # Registered in reverse (innermost first):
 
@@ -237,7 +239,13 @@ def create_app() -> FastAPI:
     # 3. CSRF protection (runs after CORS validates origin)
     app.add_middleware(CSRFProtectionMiddleware)
 
-    # 4. CORS (runs early to handle preflight OPTIONS before auth checks)
+    # 4. RLS (sets DB session context from auth token — runs after CORS allows the origin)
+    app.add_middleware(RLSMiddleware)
+
+    # 5. Rate limiting (runs before RLS to reject abusive clients early)
+    app.add_middleware(RateLimitMiddleware)
+
+    # 6. CORS (outermost — handles preflight OPTIONS before any other middleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_get_cors_origins(),
@@ -253,12 +261,6 @@ def create_app() -> FastAPI:
             "X-Correlation-ID",
         ],
     )
-
-    # 5. Rate limiting
-    app.add_middleware(RateLimitMiddleware)
-
-    # 6. RLS (outermost — sets DB session context from auth token)
-    app.add_middleware(RLSMiddleware)
 
     # ── Prometheus Metrics Instrumentation ──────────────────────────────────────
     if PROMETHEUS_AVAILABLE and prometheus_instrumentator:

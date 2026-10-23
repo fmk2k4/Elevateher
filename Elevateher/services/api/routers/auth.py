@@ -343,7 +343,19 @@ async def get_user_profile(
 ):
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "SELECT id, name, email, image, role, onboarding_complete FROM auth_users WHERE id = $1 LIMIT 1",
+            """
+            SELECT u.id, u.email, u.role, u.age, u.country, u.language,
+                   u.institution_id, u.guardian_consented, u.is_verified,
+                   u.is_suspended, u.last_login, u.login_count,
+                   mp.full_name, mp.display_name, mp.career_goals, mp.sdg_track,
+                   mp.current_education, mp.education_level,
+                   mp.preferred_languages, mp.challenges, mp.bio_short,
+                   mp.onboarding_complete
+            FROM users u
+            LEFT JOIN mentee_profiles mp ON mp.user_id = u.id
+            WHERE u.id = $1
+            LIMIT 1
+            """,
             user.id,
         )
     return {"user": dict(row) if row else None}
@@ -359,36 +371,34 @@ async def update_user_profile(
     onboarding_complete = payload.get("onboarding_complete")
     name = payload.get("name")
 
-    fields = []
-    values = []
-
-    if role and role in ("mentee", "mentor", "institution_admin"):
-        fields.append(f"role = ${len(values) + 1}")
-        values.append(role)
-    if isinstance(onboarding_complete, bool):
-        fields.append(f"onboarding_complete = ${len(values) + 1}")
-        values.append(onboarding_complete)
-    if name:
-        fields.append(f"name = ${len(values) + 1}")
-        values.append(name)
-
-    if not fields:
-        raise HTTPException(400, "No fields to update")
-
-    query = f"UPDATE auth_users SET {', '.join(fields)} WHERE id = ${len(values) + 1} RETURNING id, name, email, role, onboarding_complete"  # noqa: S608 - column names are whitelisted, values are parameterized
     async with pool.acquire() as conn:
-        result = await conn.fetchrow(query, *values, user.id)
+        # Update core user fields in users table (authoritative source for get_current_user)
         if role and role in ("mentee", "mentor", "institution_admin"):
-            try:
-                import uuid
+            await conn.execute(
+                "UPDATE users SET role = $1 WHERE id = $2",
+                role, uuid.UUID(user.id),
+            )
 
-                await conn.execute(
-                    "UPDATE users SET role = $1 WHERE id = $2", role, uuid.UUID(user.id)
-                )
-            except Exception as e:
-                logger.error(f"Failed to sync role to users table: {e}")
+        # Update profile fields in the appropriate profile table
+        profile_fields = []
+        profile_values = []
+        if name:
+            profile_fields.append(f"full_name = ${len(profile_values) + 1}")
+            profile_values.append(name)
+        if isinstance(onboarding_complete, bool):
+            profile_fields.append(f"onboarding_complete = ${len(profile_values) + 1}")
+            profile_values.append(onboarding_complete)
 
-    return {"user": dict(result) if result else None}
+        if profile_fields:
+            if user.role == "mentee":
+                profile_table = "mentee_profiles"
+            else:
+                profile_table = "mentor_profiles"
+            set_clause = ", ".join(profile_fields)
+            query = f"UPDATE {profile_table} SET {set_clause} WHERE user_id = ${len(profile_values) + 1}"  # noqa: S608 - table is hardcoded allowlist, values parameterized
+            await conn.execute(query, *profile_values, uuid.UUID(user.id))
+
+    return {"user": {"id": user.id, "role": role or user.role, "updated": True}}
 
 
 @router.get("/notifications")
@@ -432,6 +442,83 @@ async def update_notifications(
                 user.id,
             )
     return {"success": True}
+
+
+class GuardianConsentResponseRequest(BaseModel):
+    token: str
+    decision: str
+
+
+@router.get("/guardian-consent/verify")
+async def verify_guardian_consent(
+    token: str,
+    pool: asyncpg.Pool = Depends(get_db_pool),
+):
+    async with pool.acquire() as conn:
+        record = await conn.fetchrow(
+            """
+            SELECT gc.id, gc.user_id, gc.expires_at, gc.consented,
+                   u.email, u.age, mp.full_name, mp.display_name
+            FROM guardian_consents gc
+            JOIN users u ON u.id = gc.user_id
+            LEFT JOIN mentee_profiles mp ON mp.user_id = u.id
+            WHERE gc.token = $1
+            """,
+            token,
+        )
+        if not record:
+            raise HTTPException(404, detail={"valid": False, "reason": "invalid"})
+        if record["consented"]:
+            return {"valid": False, "reason": "already_consented"}
+        from datetime import datetime, timezone
+
+        if record["expires_at"] < datetime.now(timezone.utc):
+            raise HTTPException(410, detail={"valid": False, "reason": "expired"})
+
+        name = record["full_name"] or record["display_name"] or record["email"].split("@")[0]
+        return {
+            "valid": True,
+            "mentee_name": name,
+            "mentee_age": record["age"],
+        }
+
+
+@router.post("/guardian-consent/respond")
+async def respond_guardian_consent(
+    payload: GuardianConsentResponseRequest,
+    pool: asyncpg.Pool = Depends(get_db_pool),
+):
+    async with pool.acquire() as conn:
+        record = await conn.fetchrow(
+            """
+            SELECT id, user_id, expires_at, consented
+            FROM guardian_consents
+            WHERE token = $1
+            """,
+            payload.token,
+        )
+        if not record:
+            raise HTTPException(404, "Invalid consent token")
+        from datetime import datetime, timezone
+
+        if record["expires_at"] < datetime.now(timezone.utc):
+            raise HTTPException(410, "Consent link has expired")
+        if record["consented"]:
+            return {"status": "already_consented", "message": "Consent already provided"}
+
+        if payload.decision.lower() == "consented":
+            async with conn.transaction():
+                await conn.execute(
+                    "UPDATE guardian_consents SET consented=true, consented_at=now() WHERE id=$1",
+                    record["id"],
+                )
+                await conn.execute(
+                    "UPDATE users SET guardian_consented=true WHERE id=$1",
+                    record["user_id"],
+                )
+            return {"status": "consented", "message": "Guardian consent successfully registered."}
+        else:
+            return {"status": "declined", "message": "Consent declined."}
 
 
 @router.get("/guardian-consent/{token}")

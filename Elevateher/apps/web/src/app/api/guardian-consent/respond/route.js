@@ -1,9 +1,9 @@
-import { proxyJsonToBackend } from "@/app/api/utils/backend";
+import { proxyPublicToBackend } from "@/app/api/utils/backend";
 
 export async function POST(request) {
   try {
     const body = await request.text();
-    return proxyJsonToBackend(request, "/auth/guardian-consent/respond", {
+    return proxyPublicToBackend(request, "/auth/guardian-consent/respond", {
       method: "POST",
       body,
       headers: {

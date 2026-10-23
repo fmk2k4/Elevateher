@@ -1,4 +1,4 @@
-import { proxyJsonToBackend } from "@/app/api/utils/backend";
+import { proxyPublicToBackend } from "@/app/api/utils/backend";
 
 export async function GET(request) {
   try {
@@ -8,7 +8,7 @@ export async function GET(request) {
       return Response.json({ valid: false, reason: "invalid" }, { status: 400 });
     }
 
-    const res = await proxyJsonToBackend(request, `/auth/guardian-consent/verify?token=${encodeURIComponent(token)}`);
+    const res = await proxyPublicToBackend(request, `/auth/guardian-consent/verify?token=${encodeURIComponent(token)}`);
     
     if (!res.ok) {
       if (res.status === 410) {

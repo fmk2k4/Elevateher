@@ -255,6 +255,12 @@ async def create_session(
     if not match_id:
         raise HTTPException(400, "match_id required")
 
+    if user.role == "mentee" and user.is_minor and not user.guardian_consented:
+        raise HTTPException(
+            403,
+            "Guardian consent required for minors before participating in mentorship sessions.",
+        )
+
     async with pool.acquire() as conn:
         match_rows = await conn.fetch(
             """
@@ -415,6 +421,11 @@ async def create_session_message(
             raise HTTPException(404, "Session not found.")
         if row["mentee_id"] != uuid.UUID(user.id) and row["mentor_id"] != uuid.UUID(user.id):
             raise HTTPException(403, "You are not allowed to write to this session.")
+        if sender_role == "mentee" and user.is_minor and not user.guardian_consented:
+            raise HTTPException(
+                403,
+                "Guardian consent required for minors before participating in mentorship sessions.",
+            )
         if sender_role == "mentor":
             mentor_row = await conn.fetchrow(
                 "SELECT is_approved, is_active FROM mentor_profiles WHERE user_id = $1",

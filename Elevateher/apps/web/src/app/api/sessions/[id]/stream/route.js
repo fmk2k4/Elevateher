@@ -4,14 +4,16 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request, { params }) {
   try {
-    // Extract Bearer token from the incoming request's Authorization header
+    const { searchParams } = new URL(request.url);
+    const queryToken = searchParams.get("token");
     const authHeader = request.headers.get("Authorization");
-    const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const headerToken = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const token = queryToken || headerToken;
 
     const { id } = params;
     
     const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const target = `${apiBase}/sessions/${id}/stream`;
+    const target = `${apiBase.replace(/\/$/, "")}/session/${id}/stream`;
     
     const headers = new Headers();
     if (token) {

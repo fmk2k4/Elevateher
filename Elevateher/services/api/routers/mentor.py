@@ -306,6 +306,7 @@ async def list_approved_mentors(
     }
 
 
+@router.get("/matches")
 @router.get("/my-mentees")
 async def get_my_mentees(
     user: CurrentUser = Depends(require_approved_mentor),
