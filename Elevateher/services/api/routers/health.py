@@ -119,8 +119,7 @@ async def health_check(request: Request, response: Response):
     runtime = _runtime_modes()
 
     all_healthy = db_ok and redis_ok
-    all_models_available = embedding_model_ok and safety_model_ok
-    health_status = "healthy" if all_healthy and all_models_available else "degraded"
+    health_status = "healthy" if all_healthy else "degraded"
 
     if not all_healthy:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
