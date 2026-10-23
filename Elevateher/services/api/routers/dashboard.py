@@ -11,9 +11,10 @@ from dependencies import (
     get_current_user,
     get_db_pool,
     get_redis,
-    require_admin,
     require_institution_admin,
 )
+
+
 def _json_safe(o):
     if isinstance(o, Decimal):
         return float(o)
@@ -31,20 +32,20 @@ async def _get_institution_for_admin(conn, subdomain: str, user: CurrentUser):
     )
     if not inst:
         raise HTTPException(404, "Institution not found.")
-    
+
     if user.role == "institution_admin":
         raw = user.institution_id
         if not raw:
             raise HTTPException(403, "Not authorized for this institution (no context)")
-        
+
         try:
             inst_uuid = uuid.UUID(str(raw))
         except (ValueError, TypeError, AttributeError):
-            raise HTTPException(403, "Not authorized for this institution (invalid context)")
-            
+            raise HTTPException(403, "Not authorized for this institution (invalid context)") from None
+
         if str(inst_uuid) != str(inst["id"]):
             raise HTTPException(403, "Not authorized for this institution")
-            
+
     return inst
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])

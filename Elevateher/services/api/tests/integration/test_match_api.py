@@ -5,8 +5,8 @@ from httpx import ASGITransport, AsyncClient
 
 
 class MockUser:
-    def __init__(self, id, role, institution_id=None):
-        self.id = id
+    def __init__(self, user_id, role, institution_id=None):
+        self.id = user_id
         self.role = role
         self.institution_id = institution_id
 

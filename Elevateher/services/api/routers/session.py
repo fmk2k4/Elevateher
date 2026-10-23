@@ -1,9 +1,9 @@
 import asyncio
+import json
 import logging
 import uuid
 
 import asyncpg
-import json
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
@@ -15,6 +15,7 @@ from dependencies import (
     require_mentee,
     require_mentor,
 )
+
 try:
     from services.api.services.agent_service import summarise_session
 except ImportError:
@@ -848,14 +849,14 @@ async def ai_tutor_respond(
         # Return as StreamingResponse to provide typing effect in UI
         async def event_generator():
             yield f"data: {json.dumps({'type': 'metadata', 'reasoning': getattr(tutor_res, 'reasoning', None), 'coaching_type': tutor_res.coaching_type})}\n\n"
-            
+
             chunk_size = 4
             msg = tutor_res.message
             for i in range(0, len(msg), chunk_size):
                 chunk = msg[i:i+chunk_size]
                 yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
                 await asyncio.sleep(0.01)
-                
+
             yield "data: [DONE]\n\n"
 
         return StreamingResponse(event_generator(), media_type="text/event-stream")

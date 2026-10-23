@@ -32,7 +32,7 @@ def send_sms_task(self, payload: dict):
 
         return asyncio.run(run())
     except Exception as e:
-        raise self.retry(exc=e)
+        raise self.retry(exc=e)  # noqa: B904 — Celery retry pattern preserves exception context
 
 
 @celery_app.task(name="tasks.sms_tasks.send_match_confirmed_sms")

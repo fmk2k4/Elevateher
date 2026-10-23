@@ -227,10 +227,10 @@ async def verify_guardian_consent(
         )
         if not row:
             raise HTTPException(404, "Invalid consent token.")
-        
+
         if row["responded_at"]:
             raise HTTPException(410, "Consent token has already been used.")
-            
+
         if row["expires_at"] < datetime.now(UTC):
             raise HTTPException(410, "Consent token has expired.")
 
@@ -268,10 +268,10 @@ async def respond_guardian_consent(
             )
             if not row:
                 raise HTTPException(404, "Invalid consent token.")
-            
+
             if row["responded_at"]:
                 raise HTTPException(410, "Consent token has already been used.")
-                
+
             if row["expires_at"] < datetime.now(UTC):
                 raise HTTPException(410, "Consent token has expired.")
 
@@ -302,7 +302,7 @@ async def respond_guardian_consent(
                     """,
                     row["user_id"],
                 )
-            
+
             return {"success": True, "decision": data.decision}
 
 @router.get("/me", response_model=UserResponse)
@@ -375,7 +375,7 @@ async def update_user_profile(
     if not fields:
         raise HTTPException(400, "No fields to update")
 
-    query = f"UPDATE auth_users SET {', '.join(fields)} WHERE id = ${len(values) + 1} RETURNING id, name, email, role, onboarding_complete"
+    query = f"UPDATE auth_users SET {', '.join(fields)} WHERE id = ${len(values) + 1} RETURNING id, name, email, role, onboarding_complete"  # noqa: S608 - column names are whitelisted, values are parameterized
     async with pool.acquire() as conn:
         result = await conn.fetchrow(query, *values, user.id)
         if role and role in ("mentee", "mentor", "institution_admin"):

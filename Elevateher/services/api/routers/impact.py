@@ -2,8 +2,7 @@ import asyncio
 import json
 import logging
 import uuid
-from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -716,11 +715,11 @@ async def stream_impact_events(
 
     now = datetime.now()
     redis_key = f"sse_limits:{user.id}"
-    
+
     # Use Redis sorted set to track connection timestamps
     cutoff = now.timestamp() - (SSE_CONNECTION_WINDOW_MINUTES * 60)
     await redis.zremrangebyscore(redis_key, 0, cutoff)
-    
+
     count = await redis.zcard(redis_key)
     if count >= SSE_MAX_CONNECTIONS_PER_USER:
         raise HTTPException(

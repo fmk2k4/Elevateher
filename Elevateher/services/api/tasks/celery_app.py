@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # ── Ensure proper import paths ─────────────────────────────────────────────────
 # This MUST be done before importing any other elevateher modules
-import services.path  # noqa: F401
+import services.path  # noqa: F401, E402
 
 BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 BACKEND_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/1")

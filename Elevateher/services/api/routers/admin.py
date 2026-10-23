@@ -22,7 +22,7 @@ def _admin_inst_uuid(admin: CurrentUser) -> uuid.UUID | None:
     try:
         return uuid.UUID(str(raw))
     except (ValueError, TypeError, AttributeError):
-        raise HTTPException(400, "Institution context required")
+        raise HTTPException(400, "Institution context required") from None
 
 
 def _require_admin_inst_uuid(admin: CurrentUser) -> uuid.UUID:
@@ -201,7 +201,7 @@ async def review_mentor_verification(
 
         # Check institution scoping
         if admin.role != "admin":
-            admin_inst_uuid = _require_admin_inst_uuid(admin)
+            _require_admin_inst_uuid(admin)
             mentor = await conn.fetchrow("SELECT u.institution_id FROM mentor_profiles mp JOIN users u ON u.id = mp.user_id WHERE mp.id = $1", mentor_profile_id)
             if not mentor or str(mentor["institution_id"]) != admin.institution_id:
                 raise HTTPException(403, "Cannot modify mentor from other institution")
@@ -277,7 +277,7 @@ async def get_safety_dashboard(
 ):
     async with pool.acquire() as conn:
         inst_uuid = uuid.UUID(institution_id) if admin.role == "admin" and institution_id else None
-        
+
         if admin.role in ("admin", "moderator") and not inst_uuid:
             reports = await conn.fetch(
                 """
@@ -420,7 +420,7 @@ async def review_safety_item(
         if unsuspend_user_id:
             # check institution
             if admin.role != "admin":
-                admin_inst_uuid = _require_admin_inst_uuid(admin)
+                _require_admin_inst_uuid(admin)
                 target_user = await conn.fetchrow("SELECT institution_id FROM users WHERE id = $1", uuid.UUID(unsuspend_user_id))
                 if not target_user or str(target_user["institution_id"]) != admin.institution_id:
                     raise HTTPException(403, "Cannot unsuspend user from other institution")
@@ -446,7 +446,7 @@ async def review_safety_item(
                 raise HTTPException(400, "Invalid action")
 
             if admin.role != "admin":
-                admin_inst_uuid = _require_admin_inst_uuid(admin)
+                _require_admin_inst_uuid(admin)
                 report = await conn.fetchrow(
                     "SELECT u.institution_id FROM safety_reports sr JOIN users u ON u.id = sr.reported_user_id WHERE sr.id = $1",
                     uuid.UUID(report_id)
@@ -485,7 +485,7 @@ async def list_pending_mentors(
     if admin.role != "admin":
         admin_inst_uuid = _admin_inst_uuid(admin)
         if admin_inst_uuid is None:
-            raise HTTPException(400, "Institution context required")
+            raise HTTPException(400, "Institution context required") from None
         if institution_id and institution_id != admin.institution_id:
             raise HTTPException(403, "Cannot access other institution's data")
 
@@ -709,7 +709,7 @@ async def update_safety_report(
     pool: asyncpg.Pool = Depends(get_db_pool),
 ):
     if admin.role != "admin":
-        admin_inst_uuid = _require_admin_inst_uuid(admin)
+        _require_admin_inst_uuid(admin)
 
     if status not in ("open", "reviewing", "resolved", "dismissed", "escalated_to_authorities"):
         raise HTTPException(400, "Invalid status")

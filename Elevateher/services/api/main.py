@@ -123,7 +123,10 @@ async def lifespan(app: FastAPI):
     is_vercel = os.getenv("VERCEL") == "1"
 
     # Embedding model: SEA-LION-E5-600M via sentence-transformers
-    from services.api.services.matching_service import is_embedding_model_available, warm_up_embedding_model
+    from services.api.services.matching_service import (
+        is_embedding_model_available,
+        warm_up_embedding_model,
+    )
 
     if not is_vercel:
         try:

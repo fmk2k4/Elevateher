@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
+import services.path  # noqa: E402, F401 — ensures services/api/ is on sys.path
 from config import get_settings
 from dependencies import CurrentUser, require_moderator
 from middleware.rls_middleware import RequestConnectionPool
@@ -74,8 +75,6 @@ class InMemoryRedis:
         return self._data
 
 
-import services.path  # noqa: F401 — ensures services/api/ is on sys.path
-
 try:
     from services.safety.temporal_detector import record_message_event
 except ImportError:
@@ -130,7 +129,7 @@ def verify_infobip_signature(request: Request) -> None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Stale request")
     except ValueError:
         logging.warning(f"Infobip signature rejected - invalid timestamp: {timestamp}")
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid timestamp format")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid timestamp format") from None
 
     signature = request.headers.get("X-Infobip-Signature")
     if not signature:
@@ -154,8 +153,8 @@ async def get_redis(request: Request):
         try:
             await redis_client.ping()
             return redis_client
-        except Exception:
-            pass
+        except Exception as exc:
+            logging.warning("Redis ping failed: %s", exc)
 
     try:
         settings = get_settings()
@@ -490,11 +489,15 @@ async def ussd_callback(
 
             if mentor:
                 try:
+                    sms_message = (
+                        f"Hi! Your ElevateHer mentor match: {mentor['name']}, "
+                        f"{mentor['job_title']}. Reply STOP to opt out."
+                    )
                     send_sms_task.apply_async(
                         kwargs={
                             "payload": {
                                 "phone_number": phone_number,
-                                "message": f"Hi! Your ElevateHer mentor match: {mentor['name']}, {mentor['job_title']}. Reply STOP to opt out.",
+                                "message": sms_message,
                             }
                         },
                         retry=True,
