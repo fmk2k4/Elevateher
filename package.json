@@ -1,0 +1,10 @@
+{
+  "name": "elevateher-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix Elevateher run dev",
+    "build": "npm --prefix Elevateher run build",
+    "test": "npm --prefix Elevateher run test:unit",
+    "lint": "npm --prefix Elevateher/apps/dashboard run lint"
+  }
+}

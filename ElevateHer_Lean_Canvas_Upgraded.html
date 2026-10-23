@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElevateHer — Lean Canvas (Upgraded)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0f1a;
+  --surface:#141728;
+  --card:#1a1e35;
+  --card2:#1f2440;
+  --border:#2a2f50;
+  --text:#e8eaf6;
+  --muted:#7b82a8;
+  --accent-purple:#a78bfa;
+  --accent-pink:#f472b6;
+  --accent-teal:#2dd4bf;
+  --accent-amber:#fbbf24;
+  --accent-blue:#60a5fa;
+  --accent-green:#34d399;
+  --accent-coral:#fb7185;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  min-height:100vh;
+  padding:24px;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(167,139,250,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 80% 80%, rgba(45,212,191,0.05) 0%, transparent 60%);
+}
+.page{max-width:1360px;margin:0 auto;}
+
+/* HEADER */
+.header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:18px;padding-bottom:16px;
+  border-bottom:1px solid var(--border);
+}
+.header-left{}
+.header-title{
+  font-size:24px;font-weight:600;letter-spacing:-0.5px;
+  background:linear-gradient(135deg,#e8eaf6 30%,#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.header-sub{font-size:12px;color:var(--muted);margin-top:3px;font-weight:400;}
+.sdg-badges{display:flex;gap:8px;align-items:center;}
+.sdg{
+  display:flex;align-items:center;gap:5px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:20px;padding:5px 12px;font-size:11px;font-weight:500;
+}
+.sdg.s-group{color:#a78bfa;border-color:#3a2e6a;}
+.sdg.s4{color:#60a5fa;border-color:#1e3a5f;}
+.sdg-dot{width:7px;height:7px;border-radius:50%;}
+.s-group .sdg-dot{background:#a78bfa;}
+.s4 .sdg-dot{background:#60a5fa;}
+
+/* GRID */
+.canvas-grid{
+  display:grid;
+  grid-template-columns:1.1fr 1.15fr 1.4fr 1.15fr 1.1fr;
+  grid-template-rows:auto auto auto;
+  gap:10px;
+}
+.row-bottom{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr 1fr;
+  gap:10px;margin-top:10px;
+}
+.row-cost-rev{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;margin-top:10px;
+}
+
+/* PANEL */
+.panel{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px;
+  position:relative;
+  overflow:hidden;
+}
+.panel::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  border-radius:3px 0 0 3px;
+}
+.panel.p-purple::before{background:var(--accent-purple);}
+.panel.p-pink::before{background:var(--accent-pink);}
+.panel.p-teal::before{background:var(--accent-teal);}
+.panel.p-amber::before{background:var(--accent-amber);}
+.panel.p-blue::before{background:var(--accent-blue);}
+.panel.p-green::before{background:var(--accent-green);}
+.panel.p-coral::before{background:var(--accent-coral);}
+
+/* PANEL HEADER */
+.panel-header{
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:10px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.panel-icon{font-size:14px;opacity:0.8;}
+.panel-label{
+  font-size:9.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--muted);
+}
+.panel-num{
+  margin-left:auto;font-family:'DM Mono',monospace;
+  font-size:10px;color:var(--border);
+}
+
+/* ITEMS */
+.item{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;margin-bottom:6px;
+  font-size:12px;line-height:1.5;color:var(--text);
+}
+.item:last-child{margin-bottom:0;}
+.item-stat{
+  font-family:'DM Mono',monospace;font-size:10px;
+  color:var(--accent-amber);margin-bottom:2px;font-weight:500;
+}
+.item-sub{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
+
+/* SECTION LABELS */
+.section-sub{
+  font-size:9px;letter-spacing:0.8px;text-transform:uppercase;
+  color:var(--muted);margin:8px 0 5px;font-weight:500;
+}
+
+/* UVP PANEL (center, spans rows) */
+.uvp-panel{
+  background:linear-gradient(145deg,#1a1e35,#1c2040);
+  border:1px solid #3a3f70;
+  border-radius:12px;padding:18px 16px;
+  position:relative;overflow:hidden;
+  grid-row:1/3;
+}
+.uvp-panel::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:linear-gradient(to bottom,var(--accent-purple),var(--accent-pink));
+}
+.uvp-panel::after{
+  content:'';position:absolute;
+  top:-60px;right:-60px;width:180px;height:180px;
+  background:radial-gradient(circle,rgba(167,139,250,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.uvp-main{
+  font-size:20px;font-weight:600;line-height:1.3;letter-spacing:-0.3px;
+  margin:12px 0 10px;
+  background:linear-gradient(135deg,#e8eaf6,#a78bfa 60%,#f472b6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.uvp-hook{
+  background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.2);
+  border-radius:8px;padding:10px;margin:10px 0;
+}
+.uvp-hook-label{font-size:9px;letter-spacing:0.8px;text-transform:uppercase;color:var(--accent-purple);font-weight:600;margin-bottom:4px;}
+.uvp-hook-text{font-size:12px;line-height:1.5;color:#c4c8e8;font-style:italic;}
+
+.adopter-item{
+  display:flex;align-items:flex-start;gap:7px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:7px;padding:7px 9px;margin-bottom:5px;font-size:11.5px;line-height:1.4;
+}
+.adopter-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+
+/* CUSTOMER SEGMENTS */
+.seg-tag{
+  display:inline-block;font-size:10px;font-weight:500;
+  padding:2px 8px;border-radius:12px;margin:2px 2px 2px 0;
+}
+.seg-primary{background:rgba(96,165,250,0.12);color:var(--accent-blue);border:1px solid rgba(96,165,250,0.2);}
+.seg-b2b{background:rgba(167,139,250,0.12);color:var(--accent-purple);border:1px solid rgba(167,139,250,0.2);}
+.seg-ngo{background:rgba(52,211,153,0.12);color:var(--accent-green);border:1px solid rgba(52,211,153,0.2);}
+.seg-corp{background:rgba(251,191,36,0.12);color:var(--accent-amber);border:1px solid rgba(251,191,36,0.2);}
+
+/* METRICS & CHANNELS */
+.metric-row{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;margin-bottom:6px;
+}
+.metric-icon{font-size:13px;flex-shrink:0;}
+.metric-text{font-size:11.5px;line-height:1.4;flex:1;}
+.metric-badge{
+  font-family:'DM Mono',monospace;font-size:9px;font-weight:500;
+  padding:2px 6px;border-radius:10px;flex-shrink:0;
+}
+.badge-outcome{background:rgba(52,211,153,0.12);color:var(--accent-green);}
+.badge-activity{background:rgba(251,191,36,0.12);color:var(--accent-amber);}
+
+/* COST / REVENUE */
+.cr-item{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 11px;margin-bottom:6px;
+  display:flex;align-items:center;gap:8px;font-size:12px;
+}
+.cr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.phase-label{
+  font-size:9px;letter-spacing:0.7px;text-transform:uppercase;
+  font-weight:600;margin:8px 0 5px;
+}
+.phase1{color:var(--accent-green);}
+.phase2{color:var(--accent-blue);}
+.phase3{color:var(--accent-amber);}
+
+/* PILOT BOX */
+.pilot-box{
+  background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.25);
+  border-radius:8px;padding:9px 11px;margin-top:8px;
+}
+.pilot-label{font-size:9px;letter-spacing:0.8px;text-transform:uppercase;color:var(--accent-green);font-weight:600;margin-bottom:4px;}
+.pilot-text{font-size:11px;line-height:1.5;color:#a8e8d0;}
+
+/* TECH TAG */
+.tech-tag{
+  display:inline-block;font-family:'DM Mono',monospace;
+  font-size:10px;padding:2px 7px;border-radius:6px;margin:2px 2px 2px 0;
+  background:rgba(45,212,191,0.08);color:var(--accent-teal);
+  border:1px solid rgba(45,212,191,0.18);
+}
+
+/* UNFAIR ADV */
+.moat-item{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;margin-bottom:6px;
+}
+.moat-title{font-size:11.5px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.moat-desc{font-size:10.5px;color:var(--muted);line-height:1.4;}
+
+/* EXISTING ALT */
+.alt-item{
+  background:rgba(251,113,133,0.06);border:1px solid rgba(251,113,133,0.15);
+  border-radius:7px;padding:6px 9px;margin-bottom:5px;
+  font-size:11.5px;color:#f9a8b8;
+  display:flex;align-items:center;gap:6px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-title">ElevateHer — Lean Canvas</div>
+    <div class="header-sub">AI-powered career mentorship matching platform for girls &nbsp;·&nbsp; GoGlobal Innovators Challenge 2026</div>
+  </div>
+  <div class="sdg-badges">
+    <div class="sdg s-group"><div class="sdg-dot"></div>Group 10</div>
+    <div class="sdg s4"><div class="sdg-dot"></div>SDG 4</div>
+  </div>
+</div>
+
+<!-- MAIN 5-COLUMN GRID -->
+<div class="canvas-grid">
+
+  <!-- COL 1: PROBLEM -->
+  <div class="panel p-coral" style="grid-row:1/3;">
+    <div class="panel-header">
+      <span class="panel-icon">⚠</span>
+      <span class="panel-label">Problem</span>
+      <span class="panel-num">01</span>
+    </div>
+
+    <div class="item">
+      <div class="item-stat">UNESCO 2024 — only 1 in 5 STEM mentors globally is female</div>
+      Girls graduate into male-dominated fields with no relatable career role models to guide them
+    </div>
+    <div class="item">
+      <div class="item-stat">ILO 2023 — 60% of SE Asian girls cite "no guidance" as reason for under-employment</div>
+      Generic job portals ignore gender barriers: safety concerns, cultural norms, family pressure
+    </div>
+    <div class="item">
+      <div class="item-stat">World Bank — 2.4B women underserved by existing EdTech</div>
+      Zero personalised mentorship at scale for girls in low-bandwidth, underserved regions
+    </div>
+
+    <div class="section-sub">Existing alternatives</div>
+    <div class="alt-item">✗ LinkedIn — not girl-focused, no safety layer</div>
+    <div class="alt-item">✗ NGO programmes — offline-only, limited reach</div>
+    <div class="alt-item">✗ Generic career apps — no gender-equity training data</div>
+  </div>
+
+  <!-- COL 2: SOLUTION -->
+  <div class="panel p-purple" style="grid-row:1/2;">
+    <div class="panel-header">
+      <span class="panel-icon">💡</span>
+      <span class="panel-label">Solution</span>
+      <span class="panel-num">04</span>
+    </div>
+
+    <div class="item">
+      <strong>Embedding-based AI matching</strong>
+      <div class="item-sub">Fine-tuned on World Bank Women in Work dataset + 2,400 labelled female career paths. Matches by career goal, cultural context, language & availability</div>
+      <div style="margin-top:5px;">
+        <span class="tech-tag">vector-embedding</span>
+        <span class="tech-tag">fine-tuned LLM</span>
+      </div>
+    </div>
+    <div class="item">
+      <strong>NLP safety classifier</strong>
+      <div class="item-sub">Screens mentor bios for coded bias + guardian consent flow for under-18s. Verified-female mentor network across 50+ industries</div>
+      <div style="margin-top:5px;"><span class="tech-tag">NLP classifier</span><span class="tech-tag">trust layer</span></div>
+    </div>
+    <div class="item">
+      <strong>Offline-first: SMS / USSD fallback</strong>
+      <div class="item-sub">Structured USSD prompts — no smartphone or app required. Works in rural Malaysia, Indonesia, Thailand with 2G connectivity</div>
+      <div style="margin-top:5px;"><span class="tech-tag">USSD</span><span class="tech-tag">SMS-first</span></div>
+    </div>
+    <div class="item">
+      <strong>Structured mentorship tracks</strong>
+      <div class="item-sub">STEM / Business / Trades — with milestone tracking and progress badges</div>
+    </div>
+  </div>
+
+  <!-- COL 3 CENTER: UVP (spans 2 rows) -->
+  <div class="uvp-panel">
+    <div class="panel-header" style="border-bottom:1px solid rgba(167,139,250,0.2);">
+      <span class="panel-icon">★</span>
+      <span class="panel-label" style="color:#a78bfa;">Unique Value Proposition</span>
+      <span class="panel-num">03</span>
+    </div>
+
+    <div class="uvp-main">Safe AI mentorship for every girl — even offline.</div>
+
+    <p style="font-size:12px;color:#c4c8e8;line-height:1.6;margin-bottom:12px;">The first AI mentorship platform built specifically for girls' career equity — moderated, verified, free for learners, and designed for low-bandwidth regions. Not LinkedIn. Not a charity. A data flywheel that gets better with every match.</p>
+
+    <div class="uvp-hook">
+      <div class="uvp-hook-label">Pitch hook</div>
+      <div class="uvp-hook-text">"Right now, a 16-year-old girl in rural Malaysia who wants to be an engineer has zero female engineering mentors she can access. We built ElevateHer to change that — using AI that works even without internet."</div>
+    </div>
+
+    <div class="section-sub" style="margin-top:10px;">Early adopters</div>
+    <div class="adopter-item">
+      <div class="adopter-dot" style="background:var(--accent-blue);"></div>
+      Girls aged 14–22 in secondary/tertiary education — Malaysia, Indonesia, Thailand, Singapore, Japan, UK
+    </div>
+    <div class="adopter-item">
+      <div class="adopter-dot" style="background:var(--accent-purple);"></div>
+      INTI & NYP career services — pilot institutions (200 learners, 50 mentors, Semester 1)
+    </div>
+    <div class="adopter-item">
+      <div class="adopter-dot" style="background:var(--accent-teal);"></div>
+      NGOs & UN Women seeking scalable, measurable career programmes
+    </div>
+
+    <div class="pilot-box">
+      <div class="pilot-label">🎯 Confirmed pilot targets</div>
+      <div class="pilot-text">Letter of intent sought from <strong>INTI University (MY)</strong> and <strong>Nanyang Polytechnic (SG)</strong> — both GoGlobal partner institutions. Target: 200 learners + 50 mentors in Semester 1 2027.</div>
+    </div>
+  </div>
+
+  <!-- COL 4: UNFAIR ADVANTAGE -->
+  <div class="panel p-teal" style="grid-row:1/2;">
+    <div class="panel-header">
+      <span class="panel-icon">🛡</span>
+      <span class="panel-label">Unfair Advantage</span>
+      <span class="panel-num">09</span>
+    </div>
+
+    <div class="moat-item">
+      <div class="moat-title">Proprietary female-career dataset</div>
+      <div class="moat-desc">World Bank Women in Work + 3 pilot school cohorts = 2,400 labelled career paths. Impossible to replicate without same female-specific training data.</div>
+    </div>
+    <div class="moat-item">
+      <div class="moat-title">Data flywheel moat</div>
+      <div class="moat-desc">More matches → better match quality → more girls → more mentors. Self-reinforcing; gap widens vs. competitors over time.</div>
+    </div>
+    <div class="moat-item">
+      <div class="moat-title">SMS/USSD-first architecture</div>
+      <div class="moat-desc">No competitor operates offline for SE Asia. First-mover in 2G-compatible mentorship — 2.4B addressable users invisible to app-first rivals.</div>
+    </div>
+    <div class="moat-item">
+      <div class="moat-title">SDG-aligned institutional trust</div>
+      <div class="moat-desc">UN, World Bank, CSR alignment attracts grant funding competitors can't access. GoGlobal partner network = 6 institutions as launch distribution.</div>
+    </div>
+    <div class="moat-item">
+      <div class="moat-title">Moderated trust layer</div>
+      <div class="moat-desc">Verified mentors + NLP bias screening + guardian consent — regulatory moat that generic platforms cannot retrofit quickly.</div>
+    </div>
+  </div>
+
+  <!-- COL 5: CUSTOMER SEGMENTS -->
+  <div class="panel p-blue" style="grid-row:1/3;">
+    <div class="panel-header">
+      <span class="panel-icon">👥</span>
+      <span class="panel-label">Customer Segments</span>
+      <span class="panel-num">02</span>
+    </div>
+
+    <div class="section-sub">Primary users (free)</div>
+    <div class="item">
+      <span class="seg-tag seg-primary">Free tier</span>
+      <div style="margin-top:4px;">Girls aged 14–22 seeking career direction & mentors — prioritising underserved regions in SE Asia &amp; UK</div>
+    </div>
+
+    <div class="section-sub">Paying customers (B2B)</div>
+    <div class="item">
+      <span class="seg-tag seg-b2b">SaaS</span>
+      <div style="margin-top:4px;"><strong>Schools &amp; polytechnics</strong></div>
+      <div class="item-sub">INTI, NYP as pilot partners. Subscription per institution. Career services integration.</div>
+    </div>
+    <div class="item">
+      <span class="seg-tag seg-ngo">Grant</span>
+      <div style="margin-top:4px;"><strong>NGOs &amp; development orgs</strong></div>
+      <div class="item-sub">UN Women, World Bank grant-funded licences. White-label for existing programmes.</div>
+    </div>
+    <div class="item">
+      <span class="seg-tag seg-corp">CSR</span>
+      <div style="margin-top:4px;"><strong>Corporates</strong></div>
+      <div class="item-sub">CSR mentorship programmes — companies place verified female employees as mentors. Branded dashboards.</div>
+    </div>
+
+    <div class="pilot-box" style="margin-top:10px;">
+      <div class="pilot-label">SDG Impact chain</div>
+      <div class="pilot-text" style="color:#a8e8d0;">Mentored girl → career skills (SDG 4.4) → decent employment (SDG 8.6) → gender pay equity (SDG 5.5) → economic mobility</div>
+    </div>
+  </div>
+
+  <!-- COL 2: SOLUTION row 2 → KEY METRICS -->
+  <div class="panel p-amber" style="grid-row:2/3;grid-column:2/3;">
+    <div class="panel-header">
+      <span class="panel-icon">📊</span>
+      <span class="panel-label">Key Metrics</span>
+      <span class="panel-num">08</span>
+    </div>
+
+    <div class="metric-row">
+      <span class="metric-icon">🎯</span>
+      <span class="metric-text">% of mentees entering target career field within 12 months</span>
+      <span class="metric-badge badge-outcome">outcome</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-icon">💰</span>
+      <span class="metric-text">Gender pay gap reduction vs. unmentored control cohort</span>
+      <span class="metric-badge badge-outcome">outcome</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-icon">🤝</span>
+      <span class="metric-text">Active mentor–mentee matches (target: 500 in Month 6)</span>
+      <span class="metric-badge badge-activity">activity</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-icon">📱</span>
+      <span class="metric-text">SMS/offline session completion rate vs. app rate</span>
+      <span class="metric-badge badge-activity">activity</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-icon">🏫</span>
+      <span class="metric-text">B2B institution sign-ups per quarter (target: 3 in Q1)</span>
+      <span class="metric-badge badge-activity">activity</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-icon">⭐</span>
+      <span class="metric-text">Platform NPS — mentors &amp; mentees separately tracked</span>
+      <span class="metric-badge badge-activity">activity</span>
+    </div>
+  </div>
+
+  <!-- COL 4: UNFAIR ADV row 2 → CHANNELS -->
+  <div class="panel p-green" style="grid-row:2/3;grid-column:4/5;">
+    <div class="panel-header">
+      <span class="panel-icon">📡</span>
+      <span class="panel-label">Channels</span>
+      <span class="panel-num">05</span>
+    </div>
+
+    <div class="item">🎓 School &amp; university partnerships — GoGlobal network of 6 institutions as launch channel (direct B2B, zero CAC)</div>
+    <div class="item">🌐 NGO &amp; UN Women referral networks — grant-qualified leads, high-trust pipeline</div>
+    <div class="item">📲 TikTok &amp; Instagram — girl-targeted content: mentor spotlights, career stories, STEM role models</div>
+    <div class="item">💬 WhatsApp &amp; Telegram community outreach — trusted for SE Asia, peer-to-peer referrals</div>
+    <div class="item">📨 SMS broadcast — reaches offline users in rural regions without smartphones</div>
+    <div class="item">🏢 Corporate CSR pitch decks — HR &amp; sustainability teams as enterprise channel</div>
+  </div>
+
+</div><!-- /canvas-grid -->
+
+<!-- COST + REVENUE ROW -->
+<div class="row-cost-rev">
+
+  <!-- COST STRUCTURE -->
+  <div class="panel p-coral">
+    <div class="panel-header">
+      <span class="panel-icon">💸</span>
+      <span class="panel-label">Cost Structure</span>
+      <span class="panel-num">07</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-coral);"></div>AI model development, fine-tuning &amp; hosting</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-coral);"></div>Platform development &amp; maintenance</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-coral);"></div>SMS / USSD gateway infrastructure</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-coral);"></div>Mentor verification &amp; onboarding</div>
+      </div>
+      <div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-amber);"></div>Trust &amp; safety moderation team</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-amber);"></div>Marketing &amp; community outreach</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-amber);"></div>Partnerships &amp; BD payroll</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-amber);"></div>Dataset licensing &amp; labelling</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVENUE STREAMS -->
+  <div class="panel p-green">
+    <div class="panel-header">
+      <span class="panel-icon">💰</span>
+      <span class="panel-label">Revenue Streams</span>
+      <span class="panel-num">06</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div>
+        <div class="phase-label phase1">Phase 1 · Months 0–12</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-green);"></div>Grant &amp; donor funding — UN, World Bank, CSR</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-green);"></div>GoGlobal partner institution pilots (subsidised)</div>
+      </div>
+      <div>
+        <div class="phase-label phase2">Phase 2 · Months 12–24</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-blue);"></div>B2B SaaS subscription — INTI &amp; NYP first customers</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-blue);"></div>NGO white-label platform licences</div>
+      </div>
+      <div>
+        <div class="phase-label phase3">Phase 3 · Month 24+</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-amber);"></div>Corporate CSR mentorship programme fees</div>
+        <div class="cr-item"><div class="cr-dot" style="background:var(--accent-amber);"></div>Premium mentor analytics for institutions</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /page -->
+</body>
+</html>

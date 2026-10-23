@@ -1,0 +1,17 @@
+{
+  "name": "elevateher-playwright",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:report": "playwright show-report",
+    "test:dashboard": "playwright test --project=dashboard",
+    "test:web": "playwright test --project=web",
+    "test:simulator": "playwright test --project=simulator"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "typescript": "^5.6.0"
+  }
+}

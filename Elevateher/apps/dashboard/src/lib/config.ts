@@ -1,0 +1,7 @@
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export function apiUrl(path: string): string {
+  if (path.startsWith("http")) return path;
+  return `${API_BASE_URL}${path}`;
+}

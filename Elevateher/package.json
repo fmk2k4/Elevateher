@@ -1,0 +1,21 @@
+{
+  "name": "elevateher",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "cd apps/web && npm run dev",
+    "dev:dashboard": "cd apps/dashboard && npm run dev",
+    "dev:api": "python -m uvicorn services.api.main:app --reload --host 0.0.0.0 --port 8000 --app-dir services/api",
+    "dev:api:posix": "python3 -m uvicorn services.api.main:app --reload --host 0.0.0.0 --port 8000 --app-dir services/api",
+    "build": "npm run build:web && npm run build:dashboard",
+    "build:all": "npm run build:web && npm run build:dashboard",
+    "build:web": "cd apps/web && npm run build",
+    "build:dashboard": "cd apps/dashboard && npm run build",
+    "test:unit": "cd services/api && python -m pytest tests/unit -q",
+    "test:web": "cd apps/web && npx vitest run",
+    "test": "npm run test:unit && npm run test:web",
+    "setup": "node scripts/setup.mjs"
+  }
+}
+

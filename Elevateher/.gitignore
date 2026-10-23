@@ -1,0 +1,93 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+.venv*/
+*venv*/
+env/
+.env
+*.env.local
+*.env.production
+*.env.staging
+
+# Large Media Files (Host externally on YouTube/Loom/CDN)
+*.mp4
+*.mp3
+*.m4a
+*.mov
+*.wav
+
+# AI models and training data
+data/models/*.gguf
+data/models/*.bin
+data/models/*.safetensors
+data/models/checkpoints/
+data/finetune/checkpoints/
+*.gguf
+*.bin
+*.safetensors
+data/datasets/
+data/raw/
+
+# Node.js
+node_modules/
+.next/
+.turbo/
+out/
+dist/
+
+# Database and Docker volumes
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+redisdata/
+docker/volumes/
+
+# Sensitive files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# Uploaded verification documents
+services/api/uploads/
+
+# Coverage and test artifacts
+coverage.xml
+.coverage
+htmlcov/
+.pytest_cache/
+junit*.xml
+
+# IDE and OS
+.vscode/
+.idea/
+.cursor/
+.claude/
+.kilo/
+*.swp
+*.swo
+.DS_Store
+
+# Logs & Scratch Audits
+logs/
+*.log
+*.txt
+celerybeat-schedule
+celerybeat.pid
+
+# Alembic
+alembic/versions/__pycache__/
+models/ 

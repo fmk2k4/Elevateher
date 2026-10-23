@@ -1,0 +1,80 @@
+name: ElevateHer CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: elevateher_test
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          cd services/api
+          pip install -r requirements.txt
+          pip install safety
+
+      - name: Run test suite
+        run: |
+          cd services/api
+          pytest tests/ -v --cov=. --cov-report=xml
+
+      - name: Lint
+        run: |
+          cd services/api
+          ruff check .
+
+      - name: Type check
+        run: |
+          cd services/api
+          mypy .
+
+      - name: Dependency vulnerability scan
+        run: safety check
+
+  deploy-api:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy API to Railway
+        run: |
+          npm install -g @railway/cli
+          railway up --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-web:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy Web to Vercel
+        run: |
+          npm install -g vercel
+          vercel --prod
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
