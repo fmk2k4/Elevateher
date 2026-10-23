@@ -1,12 +1,7 @@
 import { getRawAccessToken, getBackendBaseUrl } from "@/app/api/utils/backend";
-import { auth } from "@/auth";
 
 export async function POST(request, { params }) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-    
     const token = await getRawAccessToken(request);
     const body = await request.text();
     

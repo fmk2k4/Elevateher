@@ -1,12 +1,7 @@
 import { proxyJsonToBackend } from "@/app/api/utils/backend";
-import { auth } from "@/auth";
 
 export async function GET(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-
     return proxyJsonToBackend(request, "/impact/events");
   } catch (err) {
     console.error("GET /api/impact-events", err);
@@ -16,10 +11,6 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await request.text();
     return proxyJsonToBackend(request, "/impact/events", {
       method: "POST",

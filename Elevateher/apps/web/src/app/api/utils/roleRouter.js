@@ -1,12 +1,19 @@
-import { auth } from "@/auth";
-
 export async function getRoleBasedPath(req, menteePathSuffix, mentorPathSuffix) {
-  const session = await auth();
-  if (!session || !session.user) {
-    throw new Error("Unauthorized");
+  // Decode the JWT payload (no verification needed — FastAPI verifies the signature)
+  // to determine the user's role for routing to the correct backend path.
+  let role = "mentee";
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.slice(7);
+      const payloadBase64 = token.split(".")[1];
+      const payload = JSON.parse(atob(payloadBase64));
+      role = payload.role || "mentee";
+    } catch {
+      role = "mentee";
+    }
   }
 
-  const role = session.user.role;
   if (role === "mentor") {
     return mentorPathSuffix;
   }

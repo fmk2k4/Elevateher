@@ -1,24 +1,22 @@
 import { proxyJsonToBackend } from "@/app/api/utils/backend";
-import { auth } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request, { params }) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    // Extract Bearer token from the incoming request's Authorization header
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
     const { id } = params;
     
-    // proxyJsonToBackend usually returns standard JSON. For streaming, we might need to 
-    // fetch manually or if proxyJsonToBackend handles streaming correctly.
-    // Our existing dashboard proxy does streaming, but in apps/web, proxyJsonToBackend uses fetch.
     const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const target = `${apiBase}/sessions/${id}/stream`;
     
     const headers = new Headers();
-    headers.set("Authorization", `Bearer ${session.user.id}`);
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
     
     const upstream = await fetch(target, {
       method: "GET",

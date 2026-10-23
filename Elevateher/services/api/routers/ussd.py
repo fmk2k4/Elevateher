@@ -224,11 +224,11 @@ async def quick_match_by_track(pool, phone: str, name: str, track: str, lang: st
               AND mp.current_mentees < mp.max_mentees
               AND $1 = ANY(mp.languages)
               AND (
-                $2 = ANY(mp.specialises_in)
+                mp.sdg_track::text = $2
                 OR mp.industry ILIKE '%' || $2 || '%'
               )
             ORDER BY CASE
-                WHEN $2 = ANY(mp.specialises_in) OR mp.industry ILIKE '%' || $2 || '%' THEN 0
+                WHEN mp.sdg_track::text = $2 OR mp.industry ILIKE '%' || $2 || '%' THEN 0
                 ELSE 1
             END, mp.years_exp DESC
             LIMIT 1

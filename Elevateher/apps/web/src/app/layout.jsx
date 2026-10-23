@@ -3,6 +3,9 @@ import { Toaster } from "sonner";
 
 import { DemoRibbon } from "@/components/DemoRibbon";
 
+// Auto-attach Bearer token to /api/* requests (set by useAuth.js after login)
+import "@/utils/fetchInterceptor";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

@@ -7,13 +7,14 @@ and provides a clean API for the router layer.
 
 # ── Ensure proper import paths ─────────────────────────────────────────────────
 # Import the centralized path management FIRST
+# Import the centralized path management FIRST so shared_constants resolves.
+import services.path  # noqa: E402, F401
+
 # Pull canonical track names from shared_constants so the schema and router
 # validation stay in lock-step. Previously this set was hand-curated and
 # drifted from the real enum (missing Trades/Creative/Healthcare, carrying dead
 # TECH/EDUCATION/ENVIRONMENT/SOCIAL entries). See implementation_plan C1.
 from shared_constants import SDG_TRACKS as _SDG_TRACKS  # noqa: E402
-
-import services.path  # noqa: F401
 from services.matching.embedder import (  # noqa: E402
     _get_sentence_transformer as _get_embedder,
 )

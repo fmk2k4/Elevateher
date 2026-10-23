@@ -1,12 +1,7 @@
 import { proxyJsonToBackend } from "@/app/api/utils/backend";
-import { auth } from "@/auth";
 
 export async function GET(request, { params }) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-
     const { id: sessionId } = params;
     const response = await proxyJsonToBackend(request, `/session/${sessionId}/messages`);
     if (!response.ok) return response;
@@ -21,10 +16,6 @@ export async function GET(request, { params }) {
 
 export async function POST(request, { params }) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-
     const { id: sessionId } = params;
     const body = await request.json();
     const { content } = body;

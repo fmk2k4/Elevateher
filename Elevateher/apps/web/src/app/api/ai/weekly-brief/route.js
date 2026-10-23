@@ -1,16 +1,17 @@
 import { proxyJsonToBackend } from "@/app/api/utils/backend";
-import { auth } from "@/auth";
 
 // AI Agent weekly brief for mentors — Phi-3 equivalent via Gemini
 // Data comes from FastAPI (Phase 1 unification), AI generation stays here (Gemini key lives here)
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id)
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(request) {
+  // Extract Bearer token from the incoming request's Authorization header
+  const authHeader = request.headers.get("Authorization");
+  const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
   // Fetch mentor data from FastAPI instead of direct Neon SQL
   const backendResp = await proxyJsonToBackend(
-    new Request("http://localhost/dashboard/mentor/weekly-brief-data"),
+    new Request("http://localhost/dashboard/mentor/weekly-brief-data", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }),
     "/dashboard/mentor/weekly-brief-data",
   );
 

@@ -1,14 +1,14 @@
-import { auth } from "@/auth";
-
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function GET(request, { params }) {
   try {
-    const session = await auth();
     const mentorId = params.id;
     if (!mentorId) return Response.json({ error: "mentor id required" }, { status: 400 });
-    if (!session?.user) return Response.json({ error: "Unauthorized" }, { status: 401 });
-    const token = session.accessToken || session.user?.accessToken;
+
+    // Extract Bearer token from the incoming request's Authorization header
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
     try {
       const backendRes = await fetch(`${API_BASE}/safety/trust/${mentorId}`, {
         headers: { Authorization: token ? `Bearer ${token}` : "" },

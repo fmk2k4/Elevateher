@@ -1,5 +1,3 @@
-import { auth } from "@/auth";
-
 // SEA-Guard equivalent — AI-powered safety scanner using Gemini
 // Covers: bio scanning, message scanning, temporal grooming detection
 
@@ -122,10 +120,6 @@ approved = true if safe_score >= 0.75 AND no critical flags (off_platform_solici
 
 export async function POST(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await request.json();
     const { text, type = "message" } = body;
 

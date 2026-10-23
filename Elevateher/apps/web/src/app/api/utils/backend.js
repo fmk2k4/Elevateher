@@ -1,22 +1,18 @@
-import { getToken } from '@auth/core/jwt';
-
 export function getBackendBaseUrl() {
 	return (
 		process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || 'http://localhost:8000'
 	).replace(/\/$/, '');
 }
 
-function isSecureRequest(request) {
-	return process.env.AUTH_URL?.startsWith('https') ?? request.url?.startsWith('https') ?? false;
-}
-
 export async function getRawAccessToken(request) {
-	return getToken({
-		req: request,
-		secret: process.env.AUTH_SECRET,
-		secureCookie: isSecureRequest(request),
-		raw: true,
-	});
+	// Extract Bearer token from the Authorization header forwarded by the client.
+	// The client stores the JWT in localStorage (set by useAuth.js after FastAPI login)
+	// and must send it as `Authorization: Bearer <token>` on /api/* requests.
+	const authHeader = request.headers.get('Authorization');
+	if (authHeader && authHeader.startsWith('Bearer ')) {
+		return authHeader.slice(7);
+	}
+	return null;
 }
 
 export async function proxyJsonToBackend(request, path, options = {}) {

@@ -1,13 +1,8 @@
 import { proxyJsonToBackend } from "@/app/api/utils/backend";
-import { auth } from "@/auth";
 
 // Admin: list and approve/reject mentor applications
 export async function GET(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-
     const { searchParams } = new URL(request.url);
     const qs = searchParams.toString();
     const response = await proxyJsonToBackend(request, `/admin/mentors${qs ? `?${qs}` : ""}`);
@@ -20,10 +15,6 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await request.text();
     return proxyJsonToBackend(request, "/admin/mentors", {
       method: "PUT",

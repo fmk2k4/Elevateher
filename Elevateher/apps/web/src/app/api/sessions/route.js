@@ -1,11 +1,7 @@
 import { proxyJsonToBackend } from "@/app/api/utils/backend";
-import { auth } from "@/auth";
 
 export async function GET(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
     const url = new URL(request.url);
     const matchId = url.searchParams.get("match_id");
     const path = matchId ? `/session?match_id=${encodeURIComponent(matchId)}` : "/session";
@@ -18,9 +14,6 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id)
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
     const body = await request.text();
     return proxyJsonToBackend(request, "/session", {
       method: "POST",

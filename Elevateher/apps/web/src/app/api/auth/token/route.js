@@ -1,21 +1,8 @@
-import { getToken } from '@auth/core/jwt';
 export async function GET(request) {
-	const isSecure = process.env.AUTH_URL?.startsWith('https') ?? request.url?.startsWith('https') ?? false;
-	const [token, jwt] = await Promise.all([
-		getToken({
-			req: request,
-			secret: process.env.AUTH_SECRET,
-			secureCookie: isSecure,
-			raw: true,
-		}),
-		getToken({
-			req: request,
-			secret: process.env.AUTH_SECRET,
-			secureCookie: isSecure,
-		}),
-	]);
+	const authHeader = request.headers.get("Authorization");
+	const token = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
-	if (!jwt) {
+	if (!token) {
 		return new Response(JSON.stringify({ error: 'Unauthorized' }), {
 			status: 401,
 			headers: {
@@ -24,14 +11,18 @@ export async function GET(request) {
 		});
 	}
 
+	// Decode JWT payload (no verification — FastAPI verifies the signature)
+	let user = { id: null, email: null, name: null };
+	try {
+		const payloadBase64 = token.split(".")[1];
+		const payload = JSON.parse(atob(payloadBase64));
+		user = { id: payload.sub, email: payload.email, name: payload.name };
+	} catch {}
+
 	return new Response(
 		JSON.stringify({
 			jwt: token,
-			user: {
-				id: jwt.sub,
-				email: jwt.email,
-				name: jwt.name,
-			},
+			user,
 		}),
 		{
 			headers: {
