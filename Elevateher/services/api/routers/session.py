@@ -106,9 +106,13 @@ async def _run_temporal_analysis(
             try:
                 from tasks.safety_tasks import handle_critical_safety_flag
 
+                # Suspend the sender of the flagged message, not always the mentor.
+                # If a mentee sends a critical violation, suspend the mentee; if a
+                # mentor sends one, suspend the mentor.
+                suspended_id = mentor_id if sender_role == "mentor" else sender_id
                 handle_critical_safety_flag.delay(
                     {
-                        "mentor_id": mentor_id,
+                        "suspended_id": suspended_id,
                         "match_id": match_id,
                         "reason": alert.get("reason", "Critical temporal safety signal"),
                     }
@@ -117,7 +121,7 @@ async def _run_temporal_analysis(
                     "CRITICAL temporal alert dispatched",
                     extra={
                         "match_id": match_id,
-                        "mentor_id": mentor_id,
+                        "suspended_id": suspended_id,
                         "risk_score": result.get("risk_score"),
                     },
                 )
@@ -126,21 +130,24 @@ async def _run_temporal_analysis(
                 if pool:
                     try:
                         async with pool.acquire() as conn:
-                            await conn.execute("UPDATE users SET is_suspended = true WHERE id = $1", uuid.UUID(mentor_id))
+                            await conn.execute(
+                                "UPDATE users SET is_suspended = true WHERE id = $1",
+                                uuid.UUID(suspended_id),
+                            )
                             await conn.execute(
                                 "UPDATE matches SET status = 'flagged', updated_at = now() WHERE mentor_id = $1 AND status IN ('active', 'pending')",
-                                uuid.UUID(mentor_id)
+                                uuid.UUID(mentor_id),
                             )
                             await conn.execute(
                                 """
                                 INSERT INTO safety_reports (reported_user_id, match_id, reason, severity, status)
                                 VALUES ($1, $2, $3, 'critical', 'open')
                                 """,
-                                uuid.UUID(mentor_id),
+                                uuid.UUID(suspended_id),
                                 uuid.UUID(match_id) if match_id != "demo" else None,
                                 alert.get("reason", "Critical temporal safety signal")
                             )
-                        logger.warning("Applied fallback suspension for mentor %s", mentor_id)
+                        logger.warning("Applied fallback suspension for user %s", suspended_id)
                     except Exception as fallback_e:
                         logger.error(f"Fallback safety suspension also failed: {fallback_e}")
         elif alert:
