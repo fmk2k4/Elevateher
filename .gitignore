@@ -70,6 +70,8 @@ coverage.xml
 htmlcov/
 .pytest_cache/
 .ruff_cache/
+.vitest/
+*.tsbuildinfo
 junit*.xml
 test-results/
 

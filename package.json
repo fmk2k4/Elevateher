@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "npm --prefix Elevateher run dev",
     "build": "npm --prefix Elevateher run build",
-    "test": "npm --prefix Elevateher run test:unit",
+    "test": "npm --prefix Elevateher run test:unit && python -m pytest Elevateher/services/api/tests/unit -q",
     "lint": "npm --prefix Elevateher/apps/dashboard run lint"
   }
 }

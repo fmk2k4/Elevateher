@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Allow static files and API routes
-  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname === '/favicon.ico') {
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname === '/favicon.ico' || pathname === '/icon.svg' || pathname === '/icon.png') {
     return NextResponse.next();
   }
 
@@ -36,6 +36,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico, sitemap.xml, robots.txt (metadata files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|icon.svg|icon.png|sitemap.xml|robots.txt).*)',
   ],
 };

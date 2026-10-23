@@ -209,102 +209,6 @@ class UserResponse(BaseModel):
     is_minor: bool = False
 
 
-@router.get("/guardian-consent/verify")
-async def verify_guardian_consent(
-    token: str,
-    pool: asyncpg.Pool = Depends(get_db_pool),
-):
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            """
-            SELECT c.id, c.expires_at, c.responded_at, c.decision,
-                   c.guardian_email, m.full_name as mentee_name
-            FROM guardian_consents c
-            JOIN mentee_profiles m ON m.user_id = c.user_id
-            WHERE c.token = $1
-            """,
-            token,
-        )
-        if not row:
-            raise HTTPException(404, "Invalid consent token.")
-
-        if row["responded_at"]:
-            raise HTTPException(410, "Consent token has already been used.")
-
-        if row["expires_at"] < datetime.now(UTC):
-            raise HTTPException(410, "Consent token has expired.")
-
-        return {
-            "valid": True,
-            "mentee_name": row["mentee_name"],
-            "guardian_email": row["guardian_email"],
-            "expires_at": row["expires_at"].isoformat()
-        }
-
-
-class ConsentDecisionRequest(BaseModel):
-    token: str
-    decision: str
-
-
-@router.post("/guardian-consent/respond")
-async def respond_guardian_consent(
-    data: ConsentDecisionRequest,
-    pool: asyncpg.Pool = Depends(get_db_pool),
-):
-    if data.decision not in ["consented", "declined"]:
-        raise HTTPException(400, "Invalid decision.")
-
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            row = await conn.fetchrow(
-                """
-                SELECT id, user_id, expires_at, responded_at
-                FROM guardian_consents
-                WHERE token = $1
-                FOR UPDATE
-                """,
-                data.token,
-            )
-            if not row:
-                raise HTTPException(404, "Invalid consent token.")
-
-            if row["responded_at"]:
-                raise HTTPException(410, "Consent token has already been used.")
-
-            if row["expires_at"] < datetime.now(UTC):
-                raise HTTPException(410, "Consent token has expired.")
-
-            await conn.execute(
-                """
-                UPDATE guardian_consents
-                SET decision = $1, responded_at = now()
-                WHERE id = $2
-                """,
-                data.decision,
-                row["id"],
-            )
-
-            if data.decision == "consented":
-                await conn.execute(
-                    """
-                    UPDATE users
-                    SET guardian_consented = true
-                    WHERE id = $1
-                    """,
-                    row["user_id"],
-                )
-                await conn.execute(
-                    """
-                    UPDATE auth_users
-                    SET "emailVerified" = now()
-                    WHERE id = $1
-                    """,
-                    row["user_id"],
-                )
-
-            return {"success": True, "decision": data.decision}
-
 @router.get("/me", response_model=UserResponse)
 async def get_me(
     user: CurrentUser = Depends(get_current_user),
@@ -492,6 +396,102 @@ async def complete_guardian_consent(
         "message": "Guardian consent confirmed. The account is now fully active.",
         "status": "activated",
     }
+
+
+class GuardianConsentVerifyResponse(BaseModel):
+    valid: bool
+    reason: str | None = None
+    mentee_name: str | None = None
+    mentee_age: int | None = None
+
+
+@router.get("/guardian-consent/verify", response_model=GuardianConsentVerifyResponse)
+async def verify_guardian_consent(
+    token: str,
+    pool: asyncpg.Pool = Depends(get_db_pool),
+):
+    async with pool.acquire() as conn:
+        record = await conn.fetchrow(
+            """
+            SELECT gc.id, gc.user_id, gc.expires_at, gc.consented,
+                   u.email, u.age, mp.full_name, mp.display_name
+            FROM guardian_consents gc
+            JOIN users u ON u.id = gc.user_id
+            LEFT JOIN mentee_profiles mp ON mp.user_id = u.id
+            WHERE gc.token = $1
+            """,
+            token,
+        )
+        if not record:
+            return {"valid": False, "reason": "invalid"}
+        if record["consented"]:
+            return {"valid": False, "reason": "already_consented"}
+
+        expires_at = record["expires_at"]
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at < datetime.now(UTC):
+            return {"valid": False, "reason": "expired"}
+
+        name = record["full_name"] or record["display_name"] or (record["email"] or "").split("@")[0]
+        return {
+            "valid": True,
+            "mentee_name": name,
+            "mentee_age": record["age"],
+        }
+
+
+class GuardianConsentRespondRequest(BaseModel):
+    token: str
+    decision: str
+
+
+@router.post("/guardian-consent/respond")
+async def respond_guardian_consent(
+    data: GuardianConsentRespondRequest,
+    pool: asyncpg.Pool = Depends(get_db_pool),
+):
+    if data.decision not in ["consented", "declined"]:
+        raise HTTPException(400, "Invalid decision.")
+
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            record = await conn.fetchrow(
+                """
+                SELECT id, user_id, expires_at, consented
+                FROM guardian_consents
+                WHERE token = $1
+                FOR UPDATE
+                """,
+                data.token,
+            )
+            if not record:
+                raise HTTPException(404, "Invalid consent token.")
+
+            if record["consented"]:
+                return {"status": "already_consented", "message": "Consent already provided"}
+
+            expires_at = record["expires_at"]
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=UTC)
+            if expires_at < datetime.now(UTC):
+                raise HTTPException(410, "Consent link has expired")
+
+            await conn.execute(
+                "UPDATE guardian_consents SET consented=true, consented_at=now() WHERE id=$1",
+                record["id"],
+            )
+            if data.decision == "consented":
+                await conn.execute(
+                    "UPDATE users SET guardian_consented=true WHERE id=$1",
+                    record["user_id"],
+                )
+                return {
+                    "status": "consented",
+                    "message": "Guardian consent successfully registered.",
+                }
+            else:
+                return {"status": "declined", "message": "Consent declined."}
 
 
 class RefreshRequest(BaseModel):

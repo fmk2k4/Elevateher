@@ -69,6 +69,8 @@ coverage.xml
 .coverage
 htmlcov/
 .pytest_cache/
+.vitest/
+*.tsbuildinfo
 junit*.xml
 
 # IDE and OS
