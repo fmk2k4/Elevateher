@@ -8,7 +8,7 @@ and provides a clean API for the router layer.
 # ── Ensure proper import paths ─────────────────────────────────────────────────
 # Import the centralized path management FIRST
 # Import the centralized path management FIRST so shared_constants resolves.
-import services.path  # noqa: E402, F401
+import services.path  # noqa: E402, F401, I001
 
 # Pull canonical track names from shared_constants so the schema and router
 # validation stay in lock-step. Previously this set was hand-curated and
@@ -17,11 +17,7 @@ import services.path  # noqa: E402, F401
 from shared_constants import SDG_TRACKS as _SDG_TRACKS  # noqa: E402
 from services.matching.embedder import (  # noqa: E402
     _get_sentence_transformer as _get_embedder,
-)
-from services.matching.embedder import (  # noqa: E402
     build_mentee_text as _build_mentee_text,
-)
-from services.matching.embedder import (  # noqa: E402
     build_mentor_text as _build_mentor_text,
 )
 from services.matching.matcher import generate_match_reason as _generate_match_reason  # noqa: E402

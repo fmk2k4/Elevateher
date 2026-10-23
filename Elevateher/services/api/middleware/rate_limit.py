@@ -91,8 +91,19 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Get Redis client
         redis_client = getattr(request.app.state, "redis", None)
         if redis_client is None:
+            if settings.environment == "production":
+                logger.error(
+                    "Redis down - blocking rate-limited request in production"
+                )
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "error": "service_unavailable",
+                        "message": "Rate limiting temporarily unavailable. Please try again later.",
+                    },
+                )
             logger.warning(
-                "Rate limiting unavailable - Redis not connected - allowing request through"
+                "Redis down - allowing rate-limited request (development)"
             )
             return await call_next(request)
 
@@ -128,7 +139,22 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             import traceback
 
             traceback.print_exc()
-            logger.warning("Rate limiting check failed - allowing request through", exc_info=True)
+            if settings.environment == "production":
+                logger.error(
+                    "Rate limit check failed - blocking in production",
+                    exc_info=True,
+                )
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "error": "service_unavailable",
+                        "message": "Rate limiting temporarily unavailable.",
+                    },
+                )
+            logger.warning(
+                "Rate limit check failed - allowing request (development)",
+                exc_info=True,
+            )
             return await call_next(request)
 
         return await call_next(request)
