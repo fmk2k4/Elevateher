@@ -1,5 +1,6 @@
 import logging
 import uuid
+from datetime import UTC, datetime
 
 import asyncpg
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -224,7 +225,7 @@ async def review_mentor_verification(
             action != "suspend",
             notes or None,
             uuid.UUID(admin.id) if action == "approve" else None,
-            None if action != "approve" else __import__("datetime").datetime.utcnow(),
+            None if action != "approve" else datetime.now(UTC),
             mentor_profile_id,
         )
 

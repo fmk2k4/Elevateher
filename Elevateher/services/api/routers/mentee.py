@@ -170,15 +170,13 @@ async def request_match(
             raise HTTPException(403, "Only mentees can request matches")
 
         mentor = await conn.fetchrow(
-            "SELECT user_id, is_approved, current_mentees, max_mentees FROM mentor_profiles WHERE user_id = $1",
+            "SELECT user_id, is_approved FROM mentor_profiles WHERE user_id = $1",
             uuid.UUID(mentor_id),
         )
         if not mentor:
             raise HTTPException(404, "Mentor not found")
         if not mentor["is_approved"]:
             raise HTTPException(400, "Mentor is not approved")
-        if mentor["current_mentees"] >= mentor["max_mentees"]:
-            raise HTTPException(400, "Mentor has reached full capacity")
 
         match = await conn.fetchrow(
             """

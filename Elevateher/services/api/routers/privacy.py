@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 import asyncpg
 from fastapi import APIRouter, Depends
@@ -27,7 +27,7 @@ async def request_data_export(
         )
 
         export = {
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
             "user": {
                 "id": str(user_data["id"]),
                 "email": user_data["email"],
