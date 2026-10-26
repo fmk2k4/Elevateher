@@ -4,7 +4,7 @@ import uuid
 import asyncpg
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
-from dependencies import CurrentUser, get_current_user, get_db_pool, require_mentee
+from dependencies import CurrentUser, get_current_user, get_db_pool, require_mentee, require_mentor
 from schemas.mentee import MenteeProfileCreate, MenteeProfileResponse
 
 try:
@@ -170,13 +170,15 @@ async def request_match(
             raise HTTPException(403, "Only mentees can request matches")
 
         mentor = await conn.fetchrow(
-            "SELECT user_id, is_approved FROM mentor_profiles WHERE user_id = $1",
+            "SELECT user_id, is_approved, current_mentees, max_mentees FROM mentor_profiles WHERE user_id = $1",
             uuid.UUID(mentor_id),
         )
         if not mentor:
             raise HTTPException(404, "Mentor not found")
         if not mentor["is_approved"]:
             raise HTTPException(400, "Mentor is not approved")
+        if mentor["current_mentees"] >= mentor["max_mentees"]:
+            raise HTTPException(400, "Mentor has reached full capacity")
 
         match = await conn.fetchrow(
             """
@@ -407,12 +409,12 @@ async def get_mentor_candidates(
 @router.post("/matches/{match_id}/accept")
 async def accept_match(
     match_id: str,
-    user: CurrentUser = Depends(require_mentee),
+    user: CurrentUser = Depends(require_mentor),
     pool: asyncpg.Pool = Depends(get_db_pool),
 ):
     async with pool.acquire() as conn:
         match = await conn.fetchrow(
-            "SELECT * FROM matches WHERE id = $1 AND mentee_id = $2 AND status = 'pending'",
+            "SELECT * FROM matches WHERE id = $1 AND mentor_id = $2 AND status = 'pending'",
             uuid.UUID(match_id),
             uuid.UUID(user.id),
         )

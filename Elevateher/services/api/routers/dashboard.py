@@ -125,7 +125,7 @@ async def get_user_dashboard_stats(
                 db_user["id"],
             )
             profile_rows = await conn.fetch(
-                "SELECT verification_status, is_approved FROM mentor_profiles WHERE user_id = $1",
+                "SELECT verification_status, current_mentees, max_mentees, is_approved, avg_mentee_outcome_score FROM mentor_profiles WHERE user_id = $1",
                 db_user["id"],
             )
             notif_rows = await conn.fetch(
@@ -416,7 +416,8 @@ async def get_institution_mentors(
             """
             SELECT u.id, mp.full_name, mp.job_title, mp.industry,
                    mp.years_exp, mp.languages, mp.bio_safety_score,
-                   mp.is_approved, mp.verification_status
+                   mp.is_approved, mp.verification_status,
+                   mp.current_mentees, mp.total_mentees_served
             FROM mentor_profiles mp
             JOIN users u ON u.id = mp.user_id
             WHERE mp.verification_status = $1
