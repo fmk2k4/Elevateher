@@ -49,7 +49,7 @@ async def register(
                 data.institution_code.lower(),
             )
 
-        needs_consent = bool(data.age is None or data.age < settings.guardian_consent_required_age)
+        needs_consent = bool(data.age is not None and data.age < settings.guardian_consent_required_age)
         try:
             async with conn.transaction():
                 user_id = await conn.fetchval(

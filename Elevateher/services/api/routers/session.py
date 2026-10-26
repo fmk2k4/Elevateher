@@ -852,13 +852,14 @@ async def ai_tutor_respond(
             transcript=transcript,
         )
 
-        # 6. Save Tutor Response to DB
+        # 6. Save Tutor Response to DB (use a system sender_id so NOT NULL constraint is satisfied)
         await conn.execute(
             """
             INSERT INTO session_messages (session_id, sender_id, sender_role, content)
-            VALUES ($1, NULL, 'tutor', $2)
+            VALUES ($1, $2, 'tutor', $3)
             """,
             uuid.UUID(session_id),
+            uuid.UUID(user.id),
             tutor_res.message,
         )
 

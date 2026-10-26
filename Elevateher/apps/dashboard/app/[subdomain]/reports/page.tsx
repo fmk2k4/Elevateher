@@ -16,7 +16,7 @@ export default function ReportsPage() {
     setGenerating(true);
     setReportUrl(null);
     try {
-      const data = await apiFetch<unknown>(`/dashboard/${subdomain}/stats?period_start=${periodStart}&period_end=${periodEnd}`);
+      const data = await apiFetch<unknown>(`/impact/report/${subdomain}?period_start=${periodStart}&period_end=${periodEnd}`);
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       setReportUrl(url);
