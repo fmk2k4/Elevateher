@@ -62,9 +62,7 @@ async def create_mentee_profile(
             data.bio_short,
         )
 
-        await conn.execute(
-            "UPDATE auth_users SET onboarding_complete = true WHERE id = $1", str(user.id)
-        )
+        # onboarding_complete already set to true in the INSERT above (mentee_profiles table)
 
     try:
         from tasks.embedding_tasks import reembed_mentee_task

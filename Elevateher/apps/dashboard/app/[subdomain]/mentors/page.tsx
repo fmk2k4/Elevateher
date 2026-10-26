@@ -16,6 +16,7 @@ interface MentorRow {
   is_approved: boolean;
   verification_status: string;
   current_mentees: number;
+  max_mentees: number;
   total_mentees_served: number;
 }
 
@@ -255,7 +256,7 @@ export default function MentorsPage() {
                 <span>Languages: {m.languages || '—'}</span>
                 <span>Safety score: {Math.round(m.bio_safety_score * 100)}%</span>
                 <span>
-                  Mentees: {m.current_mentees}/{m.total_mentees_served}
+                  Mentees: {m.current_mentees}/{m.max_mentees || m.total_mentees_served}
                 </span>
               </div>
             </div>

@@ -417,7 +417,7 @@ async def get_institution_mentors(
             SELECT u.id, mp.full_name, mp.job_title, mp.industry,
                    mp.years_exp, mp.languages, mp.bio_safety_score,
                    mp.is_approved, mp.verification_status,
-                   mp.current_mentees, mp.total_mentees_served
+                   mp.current_mentees, mp.max_mentees, mp.total_mentees_served
             FROM mentor_profiles mp
             JOIN users u ON u.id = mp.user_id
             WHERE mp.verification_status = $1

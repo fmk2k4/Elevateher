@@ -168,8 +168,6 @@ async def generate_impact_report(
 ):
     if user.role not in ("admin", "institution_admin", "moderator"):
         raise HTTPException(403, "Insufficient permissions.")
-    if str(user.institution_id or "") != institution_id and user.role != "admin":
-        raise HTTPException(403, "You can only access reports for your own institution.")
 
     resolved_institution_id = await _resolve_and_require_institution_access(
         pool,

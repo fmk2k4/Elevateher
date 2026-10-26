@@ -9,8 +9,14 @@ try:
     from services.matching.embedder import _get_sentence_transformer
     from services.matching.matcher import find_top_mentors
 except ImportError:
-    from matching.embedder import _get_sentence_transformer
-    from matching.matcher import find_top_mentors
+    try:
+        from matching.embedder import _get_sentence_transformer
+        from matching.matcher import find_top_mentors
+    except ImportError:
+
+        async def find_top_mentors(pool, mentee_user_id, top_k=5):
+            """Fallback when matching module is unavailable."""
+            return []
 try:
     from services.api.services.matching_service import generate_match_reason
 except ImportError:

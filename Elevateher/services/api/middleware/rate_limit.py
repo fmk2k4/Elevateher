@@ -64,9 +64,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 ips = [ip.strip() for ip in proxy_ips.split(",") if ip.strip()]
                 RateLimitMiddleware._trusted_proxy_ips = frozenset(ips)
             else:
-                # Default: trust only localhost proxies
+                # Default: trust only localhost IP addresses
                 RateLimitMiddleware._trusted_proxy_ips = frozenset(
-                    {"127.0.0.1", "::1", "localhost"}
+                    {"127.0.0.1", "::1"}
                 )
 
     @property
