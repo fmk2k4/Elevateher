@@ -50,6 +50,11 @@ async def register(
             )
 
         needs_consent = bool(data.age is not None and data.age < settings.guardian_consent_required_age)
+        if needs_consent and not data.guardian_email:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Guardian email is required for users under 18.",
+            )
         try:
             async with conn.transaction():
                 user_id = await conn.fetchval(

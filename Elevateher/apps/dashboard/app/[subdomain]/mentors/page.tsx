@@ -256,7 +256,7 @@ export default function MentorsPage() {
                 <span>Languages: {m.languages || '—'}</span>
                 <span>Safety score: {Math.round(m.bio_safety_score * 100)}%</span>
                 <span>
-                  Mentees: {m.current_mentees}/{m.max_mentees || m.total_mentees_served}
+                  Mentees: {m.current_mentees}/{m.max_mentees ?? m.total_mentees_served ?? 3}
                 </span>
               </div>
             </div>

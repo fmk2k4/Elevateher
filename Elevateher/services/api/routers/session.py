@@ -2,12 +2,14 @@ import asyncio
 import json
 import logging
 import uuid
+from datetime import UTC, datetime
 
 import asyncpg
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
+from config import get_settings
 from dependencies import (
     CurrentUser,
     get_current_user,
@@ -15,6 +17,8 @@ from dependencies import (
     require_mentee,
     require_mentor,
 )
+
+settings = get_settings()
 
 try:
     from services.api.services.agent_service import summarise_session
@@ -262,11 +266,27 @@ async def create_session(
     if not match_id:
         raise HTTPException(400, "match_id required")
 
-    if user.role == "mentee" and user.is_minor and not user.guardian_consented:
-        raise HTTPException(
-            403,
-            "Guardian consent required for minors before participating in mentorship sessions.",
+    # Verify guardian consent for minors directly from DB (not just JWT-derived
+    # CurrentUser, which may have stale or NULL age). A NULL age means we cannot
+    # confirm the user is NOT a minor, so we check guardian_consented explicitly.
+    async with pool.acquire() as conn:
+        user_row = await conn.fetchrow(
+            "SELECT age, guardian_consented FROM users WHERE id = $1",
+            uuid.UUID(user.id),
         )
+        if user_row:
+            db_age = user_row["age"]
+            db_guardian_consented = user_row["guardian_consented"]
+            if (
+                user.role == "mentee"
+                and db_age is not None
+                and db_age < settings.guardian_consent_required_age
+                and not db_guardian_consented
+            ):
+                raise HTTPException(
+                    403,
+                    "Guardian consent required for minors before participating in mentorship sessions.",
+                )
 
     async with pool.acquire() as conn:
         match_rows = await conn.fetch(
@@ -774,6 +794,7 @@ async def ai_tutor_respond(
     session_id: str,
     payload: ChatAIRequest,
     background_tasks: BackgroundTasks,
+    request: Request,
     user: CurrentUser = Depends(get_current_user),
     pool: asyncpg.Pool = Depends(get_db_pool),
 ):
@@ -862,6 +883,30 @@ async def ai_tutor_respond(
             uuid.UUID(user.id),
             tutor_res.message,
         )
+
+        # Publish tutor response to Redis SSE stream so clients receive it in real-time
+        redis_client = await _get_redis(request)
+        if redis_client:
+            try:
+                await redis_client.publish(
+                    f"session_messages:{session_id}",
+                    json.dumps(
+                        {
+                            "type": "new_message",
+                            "message": {
+                                "id": str(uuid.uuid4()),
+                                "session_id": session_id,
+                                "sender_id": user.id,
+                                "sender_role": "tutor",
+                                "content": tutor_res.message,
+                                "sent_at": datetime.now(UTC).isoformat(),
+                                "is_flagged": False,
+                            },
+                        }
+                    ),
+                )
+            except Exception as e:
+                logger.error(f"Failed to publish tutor message to Redis: {e}")
 
         # TODO: If tutor_res.should_nudge_mentor is True, trigger an SMS to the mentor
 

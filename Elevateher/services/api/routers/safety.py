@@ -454,7 +454,20 @@ async def safety_reports_stream(
     admin: CurrentUser = Depends(require_moderator),
     redis: aioredis.Redis = Depends(get_redis),
 ):
-    inst_uuid = institution_id if admin.role == "admin" else (admin.institution_id if admin.role != "admin" else None)
+    # Determine which institution's alerts this admin can see
+    inst_uuid: uuid.UUID | str | None = None
+    if admin.role == "admin":
+        # Super admin: optional institution filter
+        if institution_id:
+            try:
+                inst_uuid = uuid.UUID(institution_id)
+            except (ValueError, AttributeError, TypeError):
+                raise HTTPException(400, "Invalid institution_id format") from None
+    elif admin.institution_id:
+        inst_uuid = uuid.UUID(admin.institution_id)
+    else:
+        # Institution admin/moderator with no institution context: no alerts
+        inst_uuid = "NO_ACCESS"
 
     async def event_generator():
         pubsub = redis.pubsub()
@@ -464,7 +477,13 @@ async def safety_reports_stream(
                 message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
                 if message and message["type"] == "message":
                     data = json.loads(message["data"])
-                    if not inst_uuid or str(data.get("institution_id")) == str(inst_uuid):
+                    data_inst = data.get("institution_id")
+                    if inst_uuid == "NO_ACCESS":
+                        continue
+                    if inst_uuid is None:
+                        # Super admin with no filter: see all alerts
+                        yield f"data: {json.dumps(data)}\n\n"
+                    elif data_inst is not None and str(data_inst) == str(inst_uuid):
                         yield f"data: {json.dumps(data)}\n\n"
                 await asyncio.sleep(1)
         finally:

@@ -35,8 +35,10 @@ export const AuthWebView = ({ mode, proxyURL, baseURL }) => {
       return;
     }
     const handleMessage = (event) => {
-      // Verify the origin for security
-      if (event.origin !== process.env.EXPO_PUBLIC_PROXY_BASE_URL) {
+      // Verify the origin for security. Fall back to baseURL if the env var
+      // is not set, so postMessage auth responses are not silently dropped.
+      const allowedOrigin = process.env.EXPO_PUBLIC_PROXY_BASE_URL || baseURL;
+      if (event.origin !== allowedOrigin) {
         return;
       }
       if (event.data.type === 'AUTH_SUCCESS') {
