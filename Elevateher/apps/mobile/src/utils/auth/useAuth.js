@@ -23,10 +23,7 @@ export const useAuth = () => {
     // device first-unlock state, or iOS 26 TurboModule rethrow). Without a
     // catch the unhandled rejection leaves isReady=false forever and the
     // RootLayout renders null — the user sees a blank screen indefinitely.
-    Promise.race([
-      SecureStore.getItemAsync(authKey, secureStoreOptions),
-      new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
-    ])
+    SecureStore.getItemAsync(authKey, secureStoreOptions)
       .then((stored) => {
         useAuthStore.setState({
           auth: stored ? JSON.parse(stored) : null,

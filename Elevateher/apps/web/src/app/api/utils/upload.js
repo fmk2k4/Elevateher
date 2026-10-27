@@ -1,9 +1,11 @@
+const UPLOAD_URL = process.env.NEXT_PUBLIC_UPLOAD_URL || process.env.VITE_UPLOAD_URL || '/api/upload';
+
 async function upload({
   url,
   buffer,
   base64
 }) {
-  const response = await fetch(`https://api.anything.com/v0/upload`, {
+  const response = await fetch(UPLOAD_URL, {
     method: "POST",
     headers: {
       "Content-Type": buffer ? "application/octet-stream" : "application/json"

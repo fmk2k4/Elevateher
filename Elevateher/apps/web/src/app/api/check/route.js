@@ -1,8 +1,11 @@
-import sql from "@/app/api/utils/sql";
+import { proxyPublicToBackend } from "@/app/api/utils/backend";
 export async function GET() {
   try {
-    const res = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema='public'`;
-    return Response.json({ tables: res.map(r => r.table_name) });
+    const res = await proxyPublicToBackend(
+      new Request("http://localhost/check"),
+      "/check"
+    );
+    return res;
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }

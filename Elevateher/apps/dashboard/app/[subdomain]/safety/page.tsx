@@ -111,7 +111,7 @@ export default function SafetyPage() {
     try {
       const res = await apiFetch<any>(`/safety/text`, {
         method: 'POST',
-        body: JSON.stringify({ text: scanText, institution_id: subdomain })
+        body: JSON.stringify({ text: scanText, institution_id: institution?.id || subdomain })
       });
       setScanResult(res);
     } catch (err: any) {
