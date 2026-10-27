@@ -292,10 +292,11 @@ async def list_approved_mentors(
         query += f" AND ${len(values)} = ANY(mp.languages)"
         count_query += f" AND ${len(values)} = ANY(mp.languages)"
 
-    query += f" ORDER BY mp.total_mentees_served DESC, mp.avg_mentee_outcome_score DESC NULLS LAST LIMIT {limit} OFFSET {offset}"
+    query += f" ORDER BY mp.total_mentees_served DESC, mp.avg_mentee_outcome_score DESC NULLS LAST LIMIT ${len(values) + 1} OFFSET ${len(values) + 2}"
+    query_values = values + [limit, offset]
 
     async with pool.acquire() as conn:
-        mentors = await conn.fetch(query, *values)
+        mentors = await conn.fetch(query, *query_values)
         total = await conn.fetchval(count_query, *values)
 
     return {

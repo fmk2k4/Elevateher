@@ -19,6 +19,7 @@ from dependencies import (
 )
 
 settings = get_settings()
+TUTOR_SYSTEM_ID = uuid.UUID("00000000-0000-0000-0000-000000000000")
 
 try:
     from services.api.services.agent_service import summarise_session
@@ -448,11 +449,26 @@ async def create_session_message(
             raise HTTPException(404, "Session not found.")
         if row["mentee_id"] != uuid.UUID(user.id) and row["mentor_id"] != uuid.UUID(user.id):
             raise HTTPException(403, "You are not allowed to write to this session.")
-        if sender_role == "mentee" and user.is_minor and not user.guardian_consented:
-            raise HTTPException(
-                403,
-                "Guardian consent required for minors before participating in mentorship sessions.",
+        if sender_role == "mentee":
+            # Verify guardian consent from DB (not JWT-derived CurrentUser,
+            # which can have stale or NULL age). NULL age means we cannot
+            # confirm the user is NOT a minor.
+            db_user_row = await conn.fetchrow(
+                "SELECT age, guardian_consented FROM users WHERE id = $1",
+                uuid.UUID(user.id),
             )
+            if db_user_row:
+                db_age = db_user_row["age"]
+                db_guardian_consented = db_user_row["guardian_consented"]
+                if (
+                    db_age is not None
+                    and db_age < settings.guardian_consent_required_age
+                    and not db_guardian_consented
+                ):
+                    raise HTTPException(
+                        403,
+                        "Guardian consent required for minors before participating in mentorship sessions.",
+                    )
         if sender_role == "mentor":
             mentor_row = await conn.fetchrow(
                 "SELECT is_approved, is_active FROM mentor_profiles WHERE user_id = $1",
@@ -873,14 +889,15 @@ async def ai_tutor_respond(
             transcript=transcript,
         )
 
-        # 6. Save Tutor Response to DB (use a system sender_id so NOT NULL constraint is satisfied)
+        # 6. Save Tutor Response to DB (use system sender_id so tutor messages
+        # are not attributed to the human session participant)
         await conn.execute(
             """
             INSERT INTO session_messages (session_id, sender_id, sender_role, content)
             VALUES ($1, $2, 'tutor', $3)
             """,
             uuid.UUID(session_id),
-            uuid.UUID(user.id),
+            TUTOR_SYSTEM_ID,
             tutor_res.message,
         )
 
@@ -896,7 +913,7 @@ async def ai_tutor_respond(
                             "message": {
                                 "id": str(uuid.uuid4()),
                                 "session_id": session_id,
-                                "sender_id": user.id,
+                                "sender_id": str(TUTOR_SYSTEM_ID),
                                 "sender_role": "tutor",
                                 "content": tutor_res.message,
                                 "sent_at": datetime.now(UTC).isoformat(),

@@ -32,7 +32,7 @@ export default function MentorsPage() {
   const handleAction = async (userId: string, action: 'approve' | 'reject') => {
     setActionLoading(userId);
     try {
-      const endpoint = `/dashboard/admin/mentors/${userId}/${action}`;
+      const endpoint = `/admin/mentors/${userId}/${action}`;
       const payload = action === 'reject' ? { reason: 'Does not meet requirements' } : {};
       
       await apiFetch(endpoint, {

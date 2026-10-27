@@ -93,7 +93,7 @@ function formatDate(dateStr: string | null): string {
 }
 
 export default function SafetyPage() {
-  const { subdomain } = useInstitution();
+  const { subdomain, institution } = useInstitution();
   const [data, setData] = useState<SafetyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +124,13 @@ export default function SafetyPage() {
   useEffect(() => {
     let isMounted = true;
 
-    apiFetch<SafetyData>(`/admin/safety?subdomain=${subdomain}`)
+    // Only fetch once we have the resolved institution UUID
+    if (!institution?.id) {
+      setLoading(false);
+      return;
+    }
+
+    apiFetch<SafetyData>(`/admin/safety?institution_id=${institution.id}`)
       .then((payload) => {
         if (isMounted) {
           setData(payload);
@@ -145,7 +151,7 @@ export default function SafetyPage() {
     return () => {
       isMounted = false;
     };
-  }, [subdomain]);
+  }, [subdomain, institution?.id]);
 
   if (loading) {
     return (
