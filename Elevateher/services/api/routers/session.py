@@ -5,7 +5,7 @@ import uuid
 from datetime import UTC, datetime
 
 import asyncpg
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
@@ -13,6 +13,7 @@ from config import get_settings
 from dependencies import (
     CurrentUser,
     get_current_user,
+    get_current_user_from_query,
     get_db_pool,
     require_mentee,
     require_mentor,
@@ -576,9 +577,12 @@ async def create_session_message(
 async def session_stream(
     session_id: str,
     request: Request,
-    user: CurrentUser = Depends(get_current_user),
+    token: str | None = Query(default=None),
+    user: CurrentUser | None = Depends(get_current_user_from_query),
     pool: asyncpg.Pool = Depends(get_db_pool),
 ):
+    if not user:
+        raise HTTPException(401, "Authentication required")
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """

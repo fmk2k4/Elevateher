@@ -601,7 +601,7 @@ export default function CandidatesPage() {
         </div>
 
         {/* Safety filter proof banner */}
-        <SafetyFilterBanner total={(data?.pages?.[0]?.total ?? 0)} excluded={data?.pages?.[0]?.excluded_count ?? 3} />
+        <SafetyFilterBanner total={(data?.pages?.[0]?.total ?? 0)} excluded={data?.pages?.[0]?.excluded_count ?? 0} />
 
         {/* Active match warning */}
         {hasActiveMatch && (
@@ -774,7 +774,8 @@ export default function CandidatesPage() {
                   onSelect={(m) => {
                     if (hasActiveMatch)
                       return alert("Complete your current match first.");
-                    if (!confirm(`Are you sure you want to request ${m.mentor_name} as your mentor?`))
+                    const mentorName = m.display_name || m.full_name || m.mentor_name || 'this mentor';
+                    if (!confirm(`Are you sure you want to request ${mentorName} as your mentor?`))
                       return;
                     setRequestingId(m.id);
                     requestMutation.mutate(m);

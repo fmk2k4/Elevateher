@@ -70,6 +70,48 @@ async def get_current_user(
     except Exception as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token") from exc
 
+
+async def get_current_user_from_query(
+    token: str | None = None,
+    pool: asyncpg.Pool = Depends(get_db_pool),
+) -> CurrentUser | None:
+    """Authenticate a user from a token passed as a query parameter.
+
+    Used by SSE endpoints (EventSource) where custom headers cannot be set.
+    Returns None if no token is provided (caller should handle unauthenticated case).
+    """
+    if not token:
+        return None
+    try:
+        payload = decode_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+    except Exception:
+        return None
+
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT id, role, institution_id, age, guardian_consented,
+                   is_suspended, is_deleted
+            FROM users WHERE id = $1
+            """,
+            user_id,
+        )
+    if not row:
+        return None
+    if row["is_deleted"] or row["is_suspended"]:
+        return None
+
+    return CurrentUser(
+        id=str(row["id"]),
+        role=row["role"],
+        institution_id=str(row["institution_id"]) if row["institution_id"] else None,
+        age=row["age"],
+        guardian_consented=row["guardian_consented"],
+    )
+
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """

@@ -35,7 +35,7 @@ function Adapter(client) {
     },
 
     async createUser(user) {
-      const { name, email, emailVerified, image, role } = user;
+      const { name, email, emailVerified, image, role, age, guardian_email } = user;
       const sql = `
         INSERT INTO auth_users (name, email, "emailVerified", image, role)
         VALUES ($1, $2, $3, $4, $5)
@@ -51,10 +51,10 @@ function Adapter(client) {
 
       try {
         await client.query(`
-          INSERT INTO users (id, email, role, guardian_consented)
-          VALUES ($1, $2, $3, false)
+          INSERT INTO users (id, email, role, age, guardian_email, guardian_consented)
+          VALUES ($1, $2, $3, $4, $5, $6)
           ON CONFLICT (id) DO NOTHING
-        `, [createdUser.id, email, createdUser.role]);
+        `, [createdUser.id, email, createdUser.role, age || null, guardian_email || null, !(age && age < 18)]);
       } catch (e) {
         console.error('Failed to sync to domain users table', e);
       }
@@ -344,6 +344,8 @@ export const { auth } = CreateAuth({
     name: { label: 'Name', type: 'text', required: false },
     image: { label: 'Image', type: 'text', required: false },
     role: { label: 'Role', type: 'text', required: false },
+    age: { label: 'Age', type: 'number', required: false },
+    guardian_email: { label: "Guardian's Email (required if under 18)", type: 'email', required: false },
   },
   authorize: async (credentials) => {
     const { email, password } = credentials;
@@ -362,6 +364,16 @@ export const { auth } = CreateAuth({
       throw error;
     }
     
+    const age = credentials.age ? parseInt(credentials.age, 10) : null;
+    const guardian_email = credentials.guardian_email || null;
+
+    // Validate guardian email for minors
+    if (age !== null && age < 18 && !guardian_email) {
+      const error = new CredentialsSignin();
+      error.code = 'guardian-email-required';
+      throw error;
+    }
+
     const newUser = await adapter.createUser({
       emailVerified: null,
       email,
@@ -375,6 +387,8 @@ export const { auth } = CreateAuth({
         typeof credentials.image === 'string'
           ? credentials.image
           : undefined,
+      age,
+      guardian_email,
     });
     await adapter.linkAccount({
       extraData: {
@@ -392,7 +406,7 @@ export const { auth } = CreateAuth({
     signIn: '/account/signin',
     signOut: '/account/logout',
   },
-  jwt: {
+    jwt: {
     encode: async ({ secret, token }) => {
       if (!token) return '';
       const secretEncoded = new TextEncoder().encode(secret);
@@ -401,6 +415,7 @@ export const { auth } = CreateAuth({
         type: 'access',
         role: token.role || 'mentee',
         sub: token.sub,
+        institution_id: token.institution_id || null,
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()

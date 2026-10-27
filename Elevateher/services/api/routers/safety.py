@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from dependencies import (
     CurrentUser,
     get_current_user,
+    get_current_user_from_query,
     get_db_pool,
     get_redis,
     require_moderator,
@@ -451,20 +452,25 @@ async def get_risk_timeline(
 @router.get("/stream")
 async def safety_reports_stream(
     institution_id: str | None = None,
-    admin: CurrentUser = Depends(require_moderator),
+    token: str | None = Query(default=None),
+    user: CurrentUser | None = Depends(get_current_user_from_query),
     redis: aioredis.Redis = Depends(get_redis),
 ):
+    if not user:
+        raise HTTPException(401, "Authentication required")
+    if user.role not in ("admin", "institution_admin", "moderator"):
+        raise HTTPException(403, "Insufficient permissions")
     # Determine which institution's alerts this admin can see
     inst_uuid: uuid.UUID | str | None = None
-    if admin.role == "admin":
+    if user.role == "admin":
         # Super admin: optional institution filter
         if institution_id:
             try:
                 inst_uuid = uuid.UUID(institution_id)
             except (ValueError, AttributeError, TypeError):
                 raise HTTPException(400, "Invalid institution_id format") from None
-    elif admin.institution_id:
-        inst_uuid = uuid.UUID(admin.institution_id)
+    elif user.institution_id:
+        inst_uuid = uuid.UUID(user.institution_id)
     else:
         # Institution admin/moderator with no institution context: no alerts
         inst_uuid = "NO_ACCESS"

@@ -505,7 +505,9 @@ export default function SessionPage({ params }) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.detail || "Failed to ask Ela");
       }
-      return res.json();
+      // Response is SSE (text/event-stream) — the tutor message arrives
+      // via the Redis SSE stream / EventSource, not as JSON here.
+      return { success: true };
     },
     onSuccess: (data) => {
       setSafetyWarning("");

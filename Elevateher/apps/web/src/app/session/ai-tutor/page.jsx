@@ -229,13 +229,12 @@ export default function AiTutorSessionPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: text }),
         });
-        const data = await res.json();
-        if (data.tutor_response?.message) {
-          elaContent = data.tutor_response.message;
-          elaReasoning = data.tutor_response.reasoning;
-        } else if (data.error) {
-          setError(data.error);
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          setError(d.detail || d.error || "Failed to get response");
         }
+        // Response is SSE (text/event-stream) — the tutor message arrives
+        // via the Redis SSE stream / EventSource, not as JSON here.
       } else {
         // Stateless mode: call through a simple proxy route to the AI
         const res = await fetch("/api/ai/ela-chat", {

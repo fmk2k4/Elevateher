@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from dependencies import CurrentUser, get_current_user, get_db_pool, get_redis
+from dependencies import CurrentUser, get_current_user, get_current_user_from_query, get_db_pool, get_redis
 
 try:
     from services.api.services.impact_service import record_impact_event
@@ -698,10 +698,13 @@ async def get_outcome_velocity(
 async def stream_impact_events(
     request: Request,
     institution_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    token: str | None = Query(default=None),
+    user: CurrentUser | None = Depends(get_current_user_from_query),
     pool: asyncpg.Pool = Depends(get_db_pool),
     redis = Depends(get_redis),
 ):
+    if not user:
+        raise HTTPException(401, "Authentication required")
     resolved_stream_institution_id = await _resolve_and_require_institution_access(
         pool,
         institution_id,
