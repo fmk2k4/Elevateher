@@ -134,7 +134,7 @@ function MentorCard({ mentor, onRequest }) {
         }}
       >
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-          {mentor.current_mentees}/{mentor.max_mentees} mentees ·{" "}
+          {mentor.current_mentees}/{mentor.max_mentees ?? 3} mentees ·{" "}
           {(mentor.languages || []).join(", ")}
         </div>
         <button

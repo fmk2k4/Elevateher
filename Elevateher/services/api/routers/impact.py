@@ -767,7 +767,7 @@ async def stream_impact_events(
                     yield f"data: {json.dumps(data)}\n\n"
             except Exception as e:
                 logger.error(f"SSE stream error: {e}", exc_info=True)
-                yield {"event": "error", "data": "Connection error"}
+                yield "event: error\ndata: Connection error\n\n"
                 break
             await asyncio.sleep(5)
 

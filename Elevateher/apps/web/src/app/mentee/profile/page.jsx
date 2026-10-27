@@ -62,7 +62,7 @@ export default function MenteeProfilePage() {
     full_name: "",
     display_name: "",
     career_goals: [],
-    sdg_track: "SDG4",
+    sdg_track: "STEM",
     current_education: "",
     education_level: "",
     preferred_languages: [],
@@ -170,9 +170,10 @@ export default function MenteeProfilePage() {
             value={formData.sdg_track}
             onChange={(e) => setFormData({...formData, sdg_track: e.target.value})}
           >
-            <option value="SDG4">SDG4: Quality Education & Tech Skills</option>
-            <option value="SDG5">SDG5: Gender Equality & Leadership</option>
-            <option value="SDG8">SDG8: Decent Work & Economic Growth</option>
+            <option value="STEM">STEM Track: Science, Tech, Engineering, Math</option>
+            <option value="Business">Business Track: Finance, Marketing, Entrepreneurship</option>
+            <option value="Trades">Trades Track: Skilled trades and technical work</option>
+            <option value="Creative">Creative Track: Design, Media, Communications</option>
           </select>
 
           <label style={S.label}>Bio (Short)</label>

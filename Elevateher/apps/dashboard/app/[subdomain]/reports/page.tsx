@@ -5,7 +5,7 @@ import { useInstitution } from '@/components/layout/InstitutionProvider';
 import { apiFetch } from '@/src/lib/api-client';
 
 export default function ReportsPage() {
-  const { subdomain } = useInstitution();
+  const { subdomain, institution } = useInstitution();
   const [periodStart, setPeriodStart] = useState(new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
   const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split('T')[0]);
   const [generating, setGenerating] = useState(false);
@@ -13,10 +13,15 @@ export default function ReportsPage() {
   const [reportData, setReportData] = useState<any>(null);
 
   const generateReport = async () => {
+    // Only generate once we have the resolved institution UUID
+    if (!institution?.id) {
+      alert('Institution context not yet loaded. Please try again.');
+      return;
+    }
     setGenerating(true);
     setReportUrl(null);
     try {
-      const data = await apiFetch<unknown>(`/impact/report/${subdomain}?period_start=${periodStart}&period_end=${periodEnd}`);
+      const data = await apiFetch<unknown>(`/impact/report/${institution.id}?period_start=${periodStart}&period_end=${periodEnd}`);
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       setReportUrl(url);
