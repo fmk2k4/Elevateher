@@ -108,6 +108,10 @@ class Settings(BaseSettings):
     # ── Monitoring ────────────────────────────────────────────────────────────
     sentry_dsn: str = ""
 
+    # ── Frontend URL ──────────────────────────────────────────────────────────
+    # Used for consent links, password reset links, etc. in emails.
+    frontend_url: str = "http://localhost:3000"
+
     @model_validator(mode="after")
     def validate_production_config(self) -> "Settings":
         """Validate production configuration requirements."""

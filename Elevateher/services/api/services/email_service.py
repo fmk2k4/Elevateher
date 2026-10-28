@@ -15,7 +15,7 @@ async def send_guardian_consent_email(
         logger.info("Guardian consent email skipped because RESEND_API_KEY is not configured")
         return
 
-    link = f"https://localhost:3000/account/guardian-consent/{consent_token}"
+    link = f"{settings.frontend_url.rstrip('/')}/account/guardian-consent/{consent_token}"
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
