@@ -56,7 +56,7 @@ async def find_top_mentors(
                   AND mp.is_active = true
                   AND mp.bio_safety_score >= $2
                   AND u.is_suspended = false
-                  AND mp.current_mentees < mp.max_mentees
+                  AND (mp.max_mentees IS NULL OR mp.current_mentees < mp.max_mentees)
                 ORDER BY mp.embedding <=> (SELECT embedding FROM mentee_vec)
                 LIMIT $3
                 """,
@@ -96,7 +96,7 @@ async def find_top_mentors(
                   AND mp.is_active = true
                   AND mp.bio_safety_score >= $2
                   AND u.is_suspended = false
-                  AND mp.current_mentees < mp.max_mentees
+                  AND (mp.max_mentees IS NULL OR mp.current_mentees < mp.max_mentees)
                 ORDER BY mp.embedding <=> (SELECT embedding FROM mentee_vec)
                 LIMIT $3
                 """,
@@ -125,7 +125,7 @@ async def find_mentors_by_language(
             WHERE mp.is_approved = true
               AND mp.is_active = true
               AND $1 = ANY(mp.languages)
-              AND mp.current_mentees < mp.max_mentees
+              AND (mp.max_mentees IS NULL OR mp.current_mentees < mp.max_mentees)
             ORDER BY mp.total_mentees_served DESC
             LIMIT $2
             """,

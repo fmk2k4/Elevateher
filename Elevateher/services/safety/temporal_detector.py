@@ -294,7 +294,7 @@ async def record_message_event(
         )
         if alert.severity == "critical":
             try:
-                from tasks.safety_tasks import handle_critical_safety_flag
+                from services.api.tasks.safety_tasks import handle_critical_safety_flag
                 handle_critical_safety_flag.delay({
                     "mentor_id": mentor_id,
                     "match_id": match_id,

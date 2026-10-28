@@ -220,7 +220,7 @@ async def quick_match_by_track(pool, phone: str, name: str, track: str, lang: st
               AND mp.is_active = true
               AND mp.bio_safety_score >= 0.75
               AND u.is_suspended = false
-              AND mp.current_mentees < mp.max_mentees
+              AND (mp.max_mentees IS NULL OR mp.current_mentees < mp.max_mentees)
               AND $1 = ANY(mp.languages)
               AND (
                 mp.sdg_track::text = $2
@@ -391,7 +391,7 @@ async def ussd_callback(
                 return ussd_response("CON Enter your phone number to continue:")
             elif inputs[0] == "3":
                 return ussd_response(
-                    "END Mentor portal available at elevateher.app\n" "Dial *384# again to start."
+                    "END Mentor portal available at elevateher.app\nDial *384# again to start."
                 )
             return ussd_response(
                 "CON Sorry, invalid option.\n"
