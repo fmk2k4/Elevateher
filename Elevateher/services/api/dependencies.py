@@ -70,6 +70,33 @@ async def get_current_user(
     except Exception as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token") from exc
 
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            SELECT id, role, institution_id, age, guardian_consented,
+                   is_suspended, is_deleted
+            FROM users WHERE id = $1
+            """,
+            user_id,
+        )
+    if not row:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
+    if row["is_deleted"]:
+        raise HTTPException(status.HTTP_410_GONE, "Account has been deleted")
+    if row["is_suspended"]:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Account suspended. Contact support@elevateher.app",
+        )
+
+    return CurrentUser(
+        id=str(row["id"]),
+        role=row["role"],
+        institution_id=str(row["institution_id"]) if row["institution_id"] else None,
+        age=row["age"],
+        guardian_consented=row["guardian_consented"],
+    )
+
 
 async def get_current_user_from_query(
     token: str | None = None,
@@ -103,33 +130,6 @@ async def get_current_user_from_query(
         return None
     if row["is_deleted"] or row["is_suspended"]:
         return None
-
-    return CurrentUser(
-        id=str(row["id"]),
-        role=row["role"],
-        institution_id=str(row["institution_id"]) if row["institution_id"] else None,
-        age=row["age"],
-        guardian_consented=row["guardian_consented"],
-    )
-
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            """
-            SELECT id, role, institution_id, age, guardian_consented,
-                   is_suspended, is_deleted
-            FROM users WHERE id = $1
-            """,
-            user_id,
-        )
-    if not row:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
-    if row["is_deleted"]:
-        raise HTTPException(status.HTTP_410_GONE, "Account has been deleted")
-    if row["is_suspended"]:
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN,
-            "Account suspended. Contact support@elevateher.app",
-        )
 
     return CurrentUser(
         id=str(row["id"]),
