@@ -87,6 +87,7 @@ junit*.xml
 logs/
 *.log
 *.txt
+!services/api/requirements.txt
 celerybeat-schedule
 celerybeat.pid
 
